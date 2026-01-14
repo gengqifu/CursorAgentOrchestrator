@@ -35,14 +35,14 @@ description: >
 
 ### 1. 目录与代码位置
 
-假设项目根目录为 `CursorAgentOrchestrator/`，MCP Server 在：
+假设项目根目录为 `CursorAgentOrchestrator/`：
 
-- `mcp-server/src/tools/prd_generator.py`
-- 其中导出了函数：
+- **Skill 入口脚本**：`skills/prd-generator/scripts/prd_generator.py`
+- **核心实现**：`mcp-server/src/tools/prd_generator.py`
 
-```python
-from src.tools.prd_generator import generate_prd
-```
+本 Skill 包含：
+- `SKILL.md`：本文件，Skill 指导文档
+- `scripts/prd_generator.py`：入口脚本，由 Agent 调用
 
 ### 2. 工作区结构
 
@@ -141,21 +141,48 @@ workspace_id = workspace_manager.create_workspace(
    - 先把需求整理为 `requirement.md` / `requirement.txt`
    - 将该文件路径传给 `generate_prd`
 
-### 步骤 2：调用 `generate_prd`
+### 步骤 2：调用 Skill 脚本
 
-```python
-from src.tools.prd_generator import generate_prd
+**Agent 应该执行以下命令**：
 
-result = generate_prd(
-    workspace_id=workspace_id,
-    requirement_url="https://example.com/req"  # 或本地文件路径
-)
-
-assert result["success"] is True
-prd_path = result["prd_path"]
+```bash
+python3 skills/prd-generator/scripts/prd_generator.py \
+    <workspace_id> \
+    <requirement_url>
 ```
 
-> 如果抛出 `ValidationError`，通常是因为 `requirement_url` 为空字符串或只包含空白。
+**示例**：
+
+```bash
+python3 skills/prd-generator/scripts/prd_generator.py \
+    req-20240101-120000-user-auth \
+    /path/to/requirement.md
+```
+
+**返回结果**（JSON 格式）：
+
+成功时：
+```json
+{
+    "success": true,
+    "prd_path": "/path/to/.agent-orchestrator/requirements/req-xxx/PRD.md",
+    "workspace_id": "req-20240101-120000-user-auth"
+}
+```
+
+失败时：
+```json
+{
+    "success": false,
+    "error": "错误信息",
+    "error_type": "ValidationError"
+}
+```
+
+> **注意**：
+> - 脚本会自动处理导入路径，无需手动设置 PYTHONPATH
+> - 如果 `requirement_url` 为空，会返回 `ValidationError`
+> - 脚本输出 JSON 格式，便于 Agent 解析
 
 ### 步骤 3：后续处理
 
