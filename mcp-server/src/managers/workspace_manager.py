@@ -10,6 +10,7 @@ from datetime import datetime
 from src.core.config import Config
 from src.core.logger import setup_logger
 from src.core.exceptions import WorkspaceNotFoundError, ValidationError
+from src.utils.file_lock import file_lock, read_lock
 
 logger = setup_logger(__name__)
 
@@ -29,14 +30,16 @@ class WorkspaceManager:
     def _load_workspace_index(self) -> dict:
         """加载工作区索引。"""
         if self.config.workspace_index_file.exists():
-            with open(self.config.workspace_index_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+            with read_lock(self.config.workspace_index_file):
+                with open(self.config.workspace_index_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
         return {}
     
     def _save_workspace_index(self, index: dict) -> None:
         """保存工作区索引。"""
-        with open(self.config.workspace_index_file, 'w', encoding='utf-8') as f:
-            json.dump(index, f, ensure_ascii=False, indent=2)
+        with file_lock(self.config.workspace_index_file):
+            with open(self.config.workspace_index_file, 'w', encoding='utf-8') as f:
+                json.dump(index, f, ensure_ascii=False, indent=2)
     
     def _validate_project_path(self, project_path: str) -> Path:
         """验证并返回项目路径对象。"""
@@ -102,12 +105,13 @@ class WorkspaceManager:
             }
         }
         
-        # 保存工作区元数据
+        # 保存工作区元数据（使用文件锁）
         meta_file = workspace_dir / "workspace.json"
-        with open(meta_file, 'w', encoding='utf-8') as f:
-            json.dump(workspace_meta, f, ensure_ascii=False, indent=2)
+        with file_lock(meta_file):
+            with open(meta_file, 'w', encoding='utf-8') as f:
+                json.dump(workspace_meta, f, ensure_ascii=False, indent=2)
         
-        # 更新索引
+        # 更新索引（使用文件锁）
         index = self._load_workspace_index()
         index[workspace_id] = {
             "workspace_id": workspace_id,
@@ -138,8 +142,10 @@ class WorkspaceManager:
         if not meta_file.exists():
             raise WorkspaceNotFoundError(f"Workspace not found: {workspace_id}")
         
-        with open(meta_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        # 使用读锁，允许多个进程同时读取
+        with read_lock(meta_file):
+            with open(meta_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
     
     def get_workspace_status(self, workspace_id: str) -> dict:
         """获取工作区状态。
@@ -156,16 +162,32 @@ class WorkspaceManager:
     def update_workspace_status(self, workspace_id: str, status_updates: dict) -> None:
         """更新工作区状态。
         
+        使用文件锁确保并发安全。多个 Cursor 终端不能同时修改同一工作区元数据。
+        
         Args:
             workspace_id: 工作区ID
             status_updates: 要更新的状态字段
-        """
-        workspace = self.get_workspace(workspace_id)
-        workspace["status"].update(status_updates)
         
+        Raises:
+            FileLockError: 当无法在超时时间内获取锁时（其他进程正在修改）
+        """
         workspace_dir = self.config.get_workspace_path(workspace_id)
         meta_file = workspace_dir / "workspace.json"
-        with open(meta_file, 'w', encoding='utf-8') as f:
-            json.dump(workspace, f, ensure_ascii=False, indent=2)
+        
+        # 使用文件锁保护读取-修改-写入操作
+        with file_lock(meta_file):
+            # 重新读取最新数据（避免使用过期的缓存）
+            if not meta_file.exists():
+                raise WorkspaceNotFoundError(f"Workspace not found: {workspace_id}")
+            
+            with open(meta_file, 'r', encoding='utf-8') as f:
+                workspace = json.load(f)
+            
+            # 更新状态
+            workspace["status"].update(status_updates)
+            
+            # 保存
+            with open(meta_file, 'w', encoding='utf-8') as f:
+                json.dump(workspace, f, ensure_ascii=False, indent=2)
         
         logger.info(f"更新工作区状态: {workspace_id}, {status_updates}")
