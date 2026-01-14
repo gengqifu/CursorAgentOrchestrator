@@ -1,24 +1,38 @@
 # 8 个核心 SKILL 工具说明
 
-> **注意**：这些工具现在作为 Skills 使用，Agent 直接调用 `skills/*/scripts/*.py` 脚本。
-> 核心实现在 `mcp-server/src/tools/` 中。
+> **注意**：这些工具通过 **MCP Server** 暴露，符合 PDF 文档架构。
+> 核心实现在 `mcp-server/src/tools/` 中，通过 `mcp-server/src/mcp_server.py` 统一管理。
 
 ## 调用方式
 
-Agent 应该直接执行 skill 脚本，例如：
+所有工具通过 MCP Server 暴露，在 Cursor IDE 中通过 MCP 协议调用：
+
+### 在 Cursor IDE 中使用
 
 ```bash
 # 生成 PRD
-python3 skills/prd-generator/scripts/prd_generator.py <workspace_id> <requirement_url>
+@agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
 
 # 生成 TRD
-python3 skills/trd-generator/scripts/trd_generator.py <workspace_id> [prd_path]
+@agent-orchestrator generate_trd workspace_id=req-xxx prd_path=PRD.md
 
 # 分解任务
-python3 skills/task-decomposer/scripts/task_decomposer.py <workspace_id> [trd_path]
+@agent-orchestrator decompose_tasks workspace_id=req-xxx trd_path=TRD.md
 ```
 
-详细调用说明请参考各 skill 的 `SKILL.md` 文档。
+### MCP 工具名称
+
+所有工具通过以下 MCP 工具名称调用：
+- `generate_prd` - PRD 生成
+- `generate_trd` - TRD 生成
+- `decompose_tasks` - 任务分解
+- `generate_code` - 代码生成
+- `review_code` - 代码审查
+- `generate_tests` - 测试生成
+- `review_tests` - 测试审查
+- `analyze_coverage` - 覆盖率分析
+
+详细调用说明请参考各 skill 的 `SKILL.md` 文档和 [CURSOR_INTEGRATION.md](CURSOR_INTEGRATION.md)。
 
 ## 工具列表
 
@@ -170,6 +184,26 @@ PYTHONPATH=. python3 -m pytest tests/tools/ -v
 
 ## 使用示例
 
+### 通过 MCP Server 调用（推荐）
+
+在 Cursor IDE 中，通过 MCP 协议调用：
+
+```bash
+# 1. 创建工作区
+@agent-orchestrator create_workspace project_path=/path/to/project requirement_name=用户认证功能
+
+# 2. 生成 PRD
+@agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
+
+# 3. 生成 TRD
+@agent-orchestrator generate_trd workspace_id=req-xxx prd_path=PRD.md
+
+# 4. 分解任务
+@agent-orchestrator decompose_tasks workspace_id=req-xxx trd_path=TRD.md
+```
+
+### 直接调用 Python 函数（开发/测试）
+
 ```python
 from src.tools.prd_generator import generate_prd
 from src.tools.trd_generator import generate_trd
@@ -187,3 +221,5 @@ print(trd_result["trd_path"])
 tasks_result = decompose_tasks("workspace-001", trd_result["trd_path"])
 print(f"生成了 {tasks_result['task_count']} 个任务")
 ```
+
+> **注意**：直接调用 Python 函数主要用于开发和测试。生产环境应通过 MCP Server 调用。

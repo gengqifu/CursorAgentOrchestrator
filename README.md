@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Test Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen.svg)](mcp-server/htmlcov/index.html)
+[![Test Coverage](https://img.shields.io/badge/coverage-95.57%25-brightgreen.svg)](mcp-server/htmlcov/index.html)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 适配 Cursor IDE 的智能开发流程编排系统，通过 MCP (Model Context Protocol) 协议集成到 Cursor 中。
@@ -36,7 +36,7 @@ Agent Orchestrator 是一个智能开发流程编排系统，提供从需求分�
 - 🚀 **8 个核心 SKILL 工具**：完整的开发流程自动化
 - 🔄 **Multi-Agent 架构**：多智能体协作，提升代码质量
 - 📦 **MCP 协议集成**：无缝集成到 Cursor IDE
-- 🧪 **TDD 开发模式**：测试覆盖率 97%+
+- 🧪 **TDD 开发模式**：测试覆盖率 95.57%（超过 90% 要求）
 - 🐍 **Python 3.9+ 兼容**：现代化 Python 代码
 - 🔒 **零依赖设计**：最小化外部依赖
 - 🛡️ **安全保护**：完善的输入验证和错误处理
@@ -216,6 +216,7 @@ CursorAgentOrchestrator/
 │   │   │   ├── test_generator.py
 │   │   │   ├── test_reviewer.py
 │   │   │   └── coverage_analyzer.py
+│   │   ├── mcp_server.py        # MCP Server 核心实现
 │   │   └── main.py              # MCP Server 入口
 │   ├── tests/                    # 测试文件
 │   │   ├── core/
@@ -370,7 +371,7 @@ A: 支持 macOS、Linux 和 Windows。每个平台都有对应的启动脚本。
 
 ### Q: 测试覆盖率要求是多少？
 
-A: 项目要求测试覆盖率 >= 90%，当前覆盖率为 97.22%。
+A: 项目要求测试覆盖率 >= 90%，当前覆盖率为 95.57%（101 个测试用例全部通过）。
 
 ## 🤝 贡献
 
