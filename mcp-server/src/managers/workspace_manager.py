@@ -152,3 +152,20 @@ class WorkspaceManager:
         """
         workspace = self.get_workspace(workspace_id)
         return workspace.get("status", {})
+    
+    def update_workspace_status(self, workspace_id: str, status_updates: dict) -> None:
+        """更新工作区状态。
+        
+        Args:
+            workspace_id: 工作区ID
+            status_updates: 要更新的状态字段
+        """
+        workspace = self.get_workspace(workspace_id)
+        workspace["status"].update(status_updates)
+        
+        workspace_dir = self.config.get_workspace_path(workspace_id)
+        meta_file = workspace_dir / "workspace.json"
+        with open(meta_file, 'w', encoding='utf-8') as f:
+            json.dump(workspace, f, ensure_ascii=False, indent=2)
+        
+        logger.info(f"更新工作区状态: {workspace_id}, {status_updates}")

@@ -75,7 +75,8 @@ omit = [
     "*/test_*.py",
     "*/__pycache__/*",
     "*/venv/*",
-    "*/.venv/*"
+    "*/.venv/*",
+    "src/main.py"  # 主程序入口，通常不进行单元测试
 ]
 
 [tool.coverage.report]
