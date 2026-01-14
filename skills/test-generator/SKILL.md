@@ -21,7 +21,18 @@ description: >
 
 ---
 
-## 二、前置条件
+## 二、前置条件与环境约定
+
+### 1. 目录与代码位置
+
+- **Skill 入口脚本**：`skills/test-generator/scripts/test_generator.py`
+- **核心实现**：`mcp-server/src/tools/test_generator.py`
+
+本 Skill 包含：
+- `SKILL.md`：本文件，Skill 指导文档
+- `scripts/test_generator.py`：入口脚本，由 Agent 调用
+
+### 2. 前置条件
 
 - 工作区目录存在（`workspace.json` 可用）
 - `project_path` 下有可扫描的 Python 代码结构
@@ -46,15 +57,53 @@ description: >
 
 ---
 
-## 四、调用示例
+## 四、标准调用流程
 
-```python
-from src.tools.test_generator import generate_tests
+### 步骤 1：调用 Skill 脚本
 
-result = generate_tests("workspace-001", "tests/mocks")
-assert result["success"] is True
-print(result["test_files"], result["test_count"])
+**Agent 应该执行以下命令**：
+
+```bash
+python3 skills/test-generator/scripts/test_generator.py \
+    <workspace_id> \
+    [test_output_dir]
 ```
+
+**示例**：
+
+```bash
+# 使用工作区项目路径下的 tests 目录
+python3 skills/test-generator/scripts/test_generator.py req-20240101-120000-user-auth
+
+# 指定测试输出目录
+python3 skills/test-generator/scripts/test_generator.py req-20240101-120000-user-auth /path/to/tests
+```
+
+**返回结果**（JSON 格式）：
+
+成功时：
+```json
+{
+    "success": true,
+    "test_files": ["/path/to/test_xxx.py", ...],
+    "test_count": 5,
+    "workspace_id": "req-20240101-120000-user-auth"
+}
+```
+
+失败时：
+```json
+{
+    "success": false,
+    "error": "错误信息",
+    "error_type": "ErrorType"
+}
+```
+
+> **注意**：
+> - 如果不提供 `test_output_dir`，脚本会自动使用工作区项目路径下的 `tests` 目录
+> - 脚本会自动处理导入路径，无需手动设置 PYTHONPATH
+> - 脚本输出 JSON 格式，便于 Agent 解析
 
 ---
 

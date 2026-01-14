@@ -186,6 +186,18 @@ analyze_coverage(workspace_id="workspace-001", project_path="/path/to/project")
 
 ```
 CursorAgentOrchestrator/
+├── skills/                        # Skills 目录（自包含）
+│   ├── prd-generator/
+│   │   ├── SKILL.md              # Skill 指导文档
+│   │   └── scripts/
+│   │       └── prd_generator.py  # 入口脚本
+│   ├── trd-generator/
+│   ├── task-decomposer/
+│   ├── code-generator/
+│   ├── code-reviewer/
+│   ├── test-generator/
+│   ├── test-reviewer/
+│   └── coverage-analyzer/
 ├── mcp-server/                    # MCP Server 实现
 │   ├── src/                       # 源代码
 │   │   ├── core/                 # 核心模块
@@ -195,7 +207,7 @@ CursorAgentOrchestrator/
 │   │   ├── managers/            # 业务管理器
 │   │   │   ├── workspace_manager.py  # 工作区管理
 │   │   │   └── task_manager.py       # 任务管理
-│   │   ├── tools/               # 8 个核心 SKILL 工具
+│   │   ├── tools/               # 8 个核心工具实现（核心逻辑）
 │   │   │   ├── prd_generator.py
 │   │   │   ├── trd_generator.py
 │   │   │   ├── task_decomposer.py
@@ -216,8 +228,16 @@ CursorAgentOrchestrator/
 │   ├── start_mcp_server.sh      # 启动脚本 (macOS/Linux)
 │   ├── start_mcp_server.bat     # 启动脚本 (Windows)
 │   └── check_integration.sh     # 集成检查脚本
+├── ARCHITECTURE_DISCUSSION.md    # 架构方案讨论
+├── ARCHITECTURE_IMPLEMENTATION.md # 架构实施方案
+├── REFACTOR_SUMMARY.md           # 重构总结
 └── README.md                     # 项目说明
 ```
+
+**架构说明**：
+- **Skills** (`skills/`)：自包含的 skill 定义，包含 SKILL.md 和 scripts/入口脚本
+- **MCP Server** (`mcp-server/`)：提供基础设施工具（工作区管理），不直接调用工具
+- **Agent 调用流程**：Agent 根据 prompt 选择 skill，直接执行 `skills/*/scripts/*.py`
 
 ## 🛠️ 8 个核心 SKILL 工具
 

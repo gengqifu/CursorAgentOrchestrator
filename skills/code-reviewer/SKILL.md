@@ -21,7 +21,18 @@ description: >
 
 ---
 
-## 二、前置条件
+## 二、前置条件与环境约定
+
+### 1. 目录与代码位置
+
+- **Skill 入口脚本**：`skills/code-reviewer/scripts/code_reviewer.py`
+- **核心实现**：`mcp-server/src/tools/code_reviewer.py`
+
+本 Skill 包含：
+- `SKILL.md`：本文件，Skill 指导文档
+- `scripts/code_reviewer.py`：入口脚本，由 Agent 调用
+
+### 2. 前置条件
 
 - 工作区目录存在，且包含：
   - `.agent-orchestrator/requirements/{workspace_id}/workspace.json`
@@ -57,16 +68,49 @@ description: >
 
 ---
 
-## 四、调用示例
+## 四、标准调用流程
 
-```python
-from src.tools.code_reviewer import review_code
+### 步骤 1：调用 Skill 脚本
 
-result = review_code("workspace-001", "task-001")
-assert result["success"] is True
-print(result["passed"])
-print(result["review_report"])
+**Agent 应该执行以下命令**：
+
+```bash
+python3 skills/code-reviewer/scripts/code_reviewer.py \
+    <workspace_id> \
+    <task_id>
 ```
+
+**示例**：
+
+```bash
+python3 skills/code-reviewer/scripts/code_reviewer.py req-20240101-120000-user-auth task-001
+```
+
+**返回结果**（JSON 格式）：
+
+成功时：
+```json
+{
+    "success": true,
+    "task_id": "task-001",
+    "passed": true,
+    "review_report": "审查报告内容...",
+    "workspace_id": "req-20240101-120000-user-auth"
+}
+```
+
+失败时：
+```json
+{
+    "success": false,
+    "error": "错误信息",
+    "error_type": "TaskNotFoundError"
+}
+```
+
+> **注意**：
+> - 脚本会自动处理导入路径，无需手动设置 PYTHONPATH
+> - 脚本输出 JSON 格式，便于 Agent 解析
 
 ---
 

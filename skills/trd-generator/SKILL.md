@@ -38,14 +38,14 @@ Agent Orchestrator），基于现有实现 `mcp-server/src/tools/trd_generator.p
 
 ### 1. 目录与代码位置
 
-假设项目根目录为 `CursorAgentOrchestrator/`，MCP Server 在：
+假设项目根目录为 `CursorAgentOrchestrator/`：
 
-- `mcp-server/src/tools/trd_generator.py`
-- 可通过如下方式导入：
+- **Skill 入口脚本**：`skills/trd-generator/scripts/trd_generator.py`
+- **核心实现**：`mcp-server/src/tools/trd_generator.py`
 
-```python
-from src.tools.trd_generator import generate_trd
-```
+本 Skill 包含：
+- `SKILL.md`：本文件，Skill 指导文档
+- `scripts/trd_generator.py`：入口脚本，由 Agent 调用
 
 ### 2. 工作区结构
 
@@ -138,15 +138,50 @@ prd_path = prd_result["prd_path"]
 - `prd_path` 指向一个存在的文件
 - 工作区元数据已更新（`files.prd_path` 与 `prd_status`）
 
-### 步骤 1：调用 `generate_trd`
+### 步骤 1：调用 Skill 脚本
 
-```python
-from src.tools.trd_generator import generate_trd
+**Agent 应该执行以下命令**：
 
-result = generate_trd(
-    workspace_id=workspace_id,
-    prd_path=prd_path,  # 或手动指定 PRD.md 的路径
-)
+```bash
+python3 skills/trd-generator/scripts/trd_generator.py \
+    <workspace_id> \
+    [prd_path]
+```
+
+**示例**：
+
+```bash
+# 使用工作区的默认 PRD.md
+python3 skills/trd-generator/scripts/trd_generator.py req-20240101-120000-user-auth
+
+# 指定 PRD 路径
+python3 skills/trd-generator/scripts/trd_generator.py req-20240101-120000-user-auth /path/to/PRD.md
+```
+
+**返回结果**（JSON 格式）：
+
+成功时：
+```json
+{
+    "success": true,
+    "trd_path": "/path/to/.agent-orchestrator/requirements/req-xxx/TRD.md",
+    "workspace_id": "req-20240101-120000-user-auth"
+}
+```
+
+失败时：
+```json
+{
+    "success": false,
+    "error": "错误信息",
+    "error_type": "ValidationError"
+}
+```
+
+> **注意**：
+> - 如果不提供 `prd_path`，脚本会自动使用工作区的 `PRD.md`
+> - 脚本会自动处理导入路径，无需手动设置 PYTHONPATH
+> - 脚本输出 JSON 格式，便于 Agent 解析
 
 assert result["success"] is True
 trd_path = result["trd_path"]

@@ -21,7 +21,18 @@ description: >
 
 ---
 
-## 二、前置条件
+## 二、前置条件与环境约定
+
+### 1. 目录与代码位置
+
+- **Skill 入口脚本**：`skills/test-reviewer/scripts/test_reviewer.py`
+- **核心实现**：`mcp-server/src/tools/test_reviewer.py`
+
+本 Skill 包含：
+- `SKILL.md`：本文件，Skill 指导文档
+- `scripts/test_reviewer.py`：入口脚本，由 Agent 调用
+
+### 2. 前置条件
 
 - 工作区目录存在
 - 传入的 `test_files` 路径列表有效（可以为空列表）
@@ -51,16 +62,53 @@ description: >
 
 ---
 
-## 四、调用示例
+## 四、标准调用流程
 
-```python
-from src.tools.test_reviewer import review_tests
+### 步骤 1：调用 Skill 脚本
 
-result = review_tests("workspace-001", ["tests/test_xxx.py"])
-assert result["success"] is True
-print(result["passed"])
-print(result["review_report"])
+**Agent 应该执行以下命令**：
+
+```bash
+python3 skills/test-reviewer/scripts/test_reviewer.py \
+    <workspace_id> \
+    [test_files...]
 ```
+
+**示例**：
+
+```bash
+# 自动查找工作区项目路径下的测试文件
+python3 skills/test-reviewer/scripts/test_reviewer.py req-20240101-120000-user-auth
+
+# 指定测试文件列表
+python3 skills/test-reviewer/scripts/test_reviewer.py req-20240101-120000-user-auth tests/test_xxx.py tests/test_yyy.py
+```
+
+**返回结果**（JSON 格式）：
+
+成功时：
+```json
+{
+    "success": true,
+    "passed": true,
+    "review_report": "审查报告内容...",
+    "workspace_id": "req-20240101-120000-user-auth"
+}
+```
+
+失败时：
+```json
+{
+    "success": false,
+    "error": "错误信息",
+    "error_type": "ErrorType"
+}
+```
+
+> **注意**：
+> - 如果不提供 `test_files`，脚本会自动查找工作区项目路径下 `tests/` 目录中的 `test_*.py` 文件
+> - 脚本会自动处理导入路径，无需手动设置 PYTHONPATH
+> - 脚本输出 JSON 格式，便于 Agent 解析
 
 ---
 

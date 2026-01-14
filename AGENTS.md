@@ -41,19 +41,19 @@ Usage notes:
 
 <skill>
 <name>code-generator</name>
-<description>></description>
+<description>代码生成技能。使用当你已有任务列表（tasks.json）和工作区信息，需要针对某个任务生成功能代码文件和对应测试文件，并更新任务状态与关联文件路径。</description>
 <location>project</location>
 </skill>
 
 <skill>
 <name>code-reviewer</name>
-<description>></description>
+<description>代码审查技能。使用当你已经为某个任务生成了代码文件，需要对代码质量进行自动审查，生成审查报告，并更新任务的审查状态与结果。</description>
 <location>project</location>
 </skill>
 
 <skill>
 <name>coverage-analyzer</name>
-<description>></description>
+<description>覆盖率分析技能。使用当你已经有可运行的测试，并希望统计项目的测试覆盖率、生成覆盖率报告（如 HTML），以评估测试完整度。</description>
 <location>project</location>
 </skill>
 
@@ -101,7 +101,7 @@ Usage notes:
 
 <skill>
 <name>prd-generator</name>
-<description>></description>
+<description>生成标准化产品需求文档（PRD）的技能。使用当你需要基于已有需求输入（URL 或本地文件）为某个工作区自动生成 PRD，并写入 .agent-orchestrator 目录下的 workspace 元数据与 PRD.md 文件。</description>
 <location>project</location>
 </skill>
 
@@ -119,7 +119,7 @@ Usage notes:
 
 <skill>
 <name>task-decomposer</name>
-<description>></description>
+<description>任务分解技能。使用当你已经有标准化 TRD 文档和工作区信息，需要将 TRD 中的实现方案拆分为结构化的任务列表（tasks.json），为后续代码生成与审查提供任务粒度。</description>
 <location>project</location>
 </skill>
 
@@ -131,13 +131,13 @@ Usage notes:
 
 <skill>
 <name>test-generator</name>
-<description>></description>
+<description>测试生成技能。使用当你已经有项目代码和任务信息，需要为现有代码生成基础的 Mock/单元测试文件，并整理到指定测试目录下。</description>
 <location>project</location>
 </skill>
 
 <skill>
 <name>test-reviewer</name>
-<description>></description>
+<description>测试审查技能。使用当你已有一批测试文件（单元测试或集成测试），需要对测试质量、覆盖内容、基本结构进行快速审查，并生成报告。</description>
 <location>project</location>
 </skill>
 
@@ -149,7 +149,7 @@ Usage notes:
 
 <skill>
 <name>trd-generator</name>
-<description>></description>
+<description>生成技术设计文档（TRD）的技能。使用当你已经有标准化 PRD 文档和项目代码仓库，需要为某个工作区生成 TRD.md，并更新工作区状态与元数据，用于后续任务分解与实现。</description>
 <location>project</location>
 </skill>
 

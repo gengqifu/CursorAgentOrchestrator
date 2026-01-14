@@ -188,44 +188,56 @@ python src\main.py
 
 ## 可用工具列表
 
-集成成功后，以下工具将在 Cursor 中可用：
+### MCP Server 工具（基础设施）
 
-1. **generate_prd** - 生成 PRD 文档
-2. **generate_trd** - 生成 TRD 文档
-3. **decompose_tasks** - 分解任务
-4. **generate_code** - 生成代码
-5. **review_code** - 审查代码
-6. **generate_tests** - 生成测试
-7. **review_tests** - 审查测试
-8. **analyze_coverage** - 分析覆盖率
+集成成功后，以下 MCP 工具将在 Cursor 中可用：
+
+1. **create_workspace** - 创建工作区
+2. **get_workspace** - 获取工作区信息
+3. **update_workspace_status** - 更新工作区状态
+4. **get_tasks** - 获取任务列表
+5. **update_task_status** - 更新任务状态
+
+### Skills（Agent 直接调用）
+
+Agent 可以通过执行 skill 脚本来使用以下 8 个核心 skills：
+
+1. **prd-generator** - 生成 PRD 文档
+2. **trd-generator** - 生成 TRD 文档
+3. **task-decomposer** - 分解任务
+4. **code-generator** - 生成代码
+5. **code-reviewer** - 审查代码
+6. **test-generator** - 生成测试
+7. **test-reviewer** - 审查测试
+8. **coverage-analyzer** - 分析覆盖率
 
 ## 工作流程示例
 
 ### 完整开发流程
 
-1. **创建需求工作区**
+1. **创建需求工作区**（通过 MCP 工具）
    ```
    @agent-orchestrator create_workspace
    ```
 
-2. **生成 PRD**
+2. **生成 PRD**（Agent 执行 skill）
    ```
-   @agent-orchestrator generate_prd workspace_id requirement_url
-   ```
-
-3. **生成 TRD**
-   ```
-   @agent-orchestrator generate_trd workspace_id prd_path
+   Agent 执行: python3 skills/prd-generator/scripts/prd_generator.py req-001 /path/to/req.md
    ```
 
-4. **分解任务**
+3. **生成 TRD**（Agent 执行 skill）
    ```
-   @agent-orchestrator decompose_tasks workspace_id trd_path
+   Agent 执行: python3 skills/trd-generator/scripts/trd_generator.py req-001
    ```
 
-5. **生成代码**
+4. **分解任务**（Agent 执行 skill）
    ```
-   @agent-orchestrator generate_code workspace_id task_id
+   Agent 执行: python3 skills/task-decomposer/scripts/task_decomposer.py req-001
+   ```
+
+5. **生成代码**（Agent 执行 skill）
+   ```
+   Agent 执行: python3 skills/code-generator/scripts/code_generator.py req-001 task-001
    ```
 
 6. **审查代码**

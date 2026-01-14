@@ -1,5 +1,25 @@
 # 8 个核心 SKILL 工具说明
 
+> **注意**：这些工具现在作为 Skills 使用，Agent 直接调用 `skills/*/scripts/*.py` 脚本。
+> 核心实现在 `mcp-server/src/tools/` 中。
+
+## 调用方式
+
+Agent 应该直接执行 skill 脚本，例如：
+
+```bash
+# 生成 PRD
+python3 skills/prd-generator/scripts/prd_generator.py <workspace_id> <requirement_url>
+
+# 生成 TRD
+python3 skills/trd-generator/scripts/trd_generator.py <workspace_id> [prd_path]
+
+# 分解任务
+python3 skills/task-decomposer/scripts/task_decomposer.py <workspace_id> [trd_path]
+```
+
+详细调用说明请参考各 skill 的 `SKILL.md` 文档。
+
 ## 工具列表
 
 ### 1. PRD 生成工具 (`prd_generator`)

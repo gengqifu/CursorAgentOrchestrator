@@ -21,7 +21,18 @@ description: >
 
 ---
 
-## 二、前置条件
+## 二、前置条件与环境约定
+
+### 1. 目录与代码位置
+
+- **Skill 入口脚本**：`skills/coverage-analyzer/scripts/coverage_analyzer.py`
+- **核心实现**：`mcp-server/src/tools/coverage_analyzer.py`
+
+本 Skill 包含：
+- `SKILL.md`：本文件，Skill 指导文档
+- `scripts/coverage_analyzer.py`：入口脚本，由 Agent 调用
+
+### 2. 前置条件
 
 - 工作区存在，`workspace.json` 中有有效的 `project_path`
 - 项目中已经配置好测试命令（当前实现基于 `coverage` 工具）
@@ -54,15 +65,53 @@ description: >
 
 ---
 
-## 四、调用示例
+## 四、标准调用流程
 
-```python
-from src.tools.coverage_analyzer import analyze_coverage
+### 步骤 1：调用 Skill 脚本
 
-result = analyze_coverage("workspace-001", "/path/to/project")
-assert result["success"] is True
-print(result["coverage"], result.get("coverage_report_path"))
+**Agent 应该执行以下命令**：
+
+```bash
+python3 skills/coverage-analyzer/scripts/coverage_analyzer.py \
+    <workspace_id> \
+    [project_path]
 ```
+
+**示例**：
+
+```bash
+# 使用工作区的项目路径
+python3 skills/coverage-analyzer/scripts/coverage_analyzer.py req-20240101-120000-user-auth
+
+# 指定项目路径
+python3 skills/coverage-analyzer/scripts/coverage_analyzer.py req-20240101-120000-user-auth /path/to/project
+```
+
+**返回结果**（JSON 格式）：
+
+成功时：
+```json
+{
+    "success": true,
+    "coverage": 83.0,
+    "coverage_report_path": "/path/to/.agent-orchestrator/requirements/req-xxx/coverage_report/index.html",
+    "workspace_id": "req-20240101-120000-user-auth"
+}
+```
+
+失败时：
+```json
+{
+    "success": false,
+    "error": "错误信息",
+    "error_type": "ErrorType"
+}
+```
+
+> **注意**：
+> - 如果不提供 `project_path`，脚本会自动使用工作区的项目路径
+> - 脚本会自动处理导入路径，无需手动设置 PYTHONPATH
+> - 脚本输出 JSON 格式，便于 Agent 解析
 
 ---
 
