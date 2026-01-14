@@ -40,6 +40,24 @@ Usage notes:
 </skill>
 
 <skill>
+<name>code-generator</name>
+<description>></description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>code-reviewer</name>
+<description>></description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>coverage-analyzer</name>
+<description>></description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>doc-coauthoring</name>
 <description>Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.</description>
 <location>project</location>
@@ -82,6 +100,12 @@ Usage notes:
 </skill>
 
 <skill>
+<name>prd-generator</name>
+<description>></description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>skill-creator</name>
 <description>Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.</description>
 <location>project</location>
@@ -94,14 +118,38 @@ Usage notes:
 </skill>
 
 <skill>
+<name>task-decomposer</name>
+<description>></description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>template</name>
 <description>Replace with description of the skill and when Claude should use it.</description>
 <location>project</location>
 </skill>
 
 <skill>
+<name>test-generator</name>
+<description>></description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>test-reviewer</name>
+<description>></description>
+<location>project</location>
+</skill>
+
+<skill>
 <name>theme-factory</name>
 <description>Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly.</description>
+<location>project</location>
+</skill>
+
+<skill>
+<name>trd-generator</name>
+<description>></description>
 <location>project</location>
 </skill>
 
