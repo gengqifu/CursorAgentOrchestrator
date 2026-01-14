@@ -72,3 +72,12 @@ def create_test_workspace(
     )
     
     return workspace_id
+
+
+@pytest.fixture
+def create_test_workspace_fixture(temp_dir, sample_project_dir, workspace_manager):
+    """创建测试工作区的 fixture。"""
+    return create_test_workspace(
+        workspace_manager=workspace_manager,
+        project_dir=sample_project_dir
+    )

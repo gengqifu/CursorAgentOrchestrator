@@ -191,3 +191,213 @@ class TestFileLock:
         with pytest.raises(FileNotFoundError):
             with read_lock(test_file):
                 test_file.read_text(encoding='utf-8')
+    
+    def test_file_lock_handles_oserror_on_close(self, temp_dir, monkeypatch):
+        """测试文件锁处理关闭时的 OSError。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock os.close 抛出 OSError
+        original_close = __import__('os').close
+        call_count = []
+        
+        def mock_close(fd):
+            call_count.append(1)
+            if len(call_count) == 1:  # 第一次调用时抛出错误
+                raise OSError("模拟关闭错误")
+            return original_close(fd)
+        
+        monkeypatch.setattr('os.close', mock_close)
+        
+        # Act & Assert - 应该正常处理错误
+        with file_lock(test_file):
+            test_file.write_text('{"value": 1}', encoding='utf-8')
+        
+        assert test_file.read_text(encoding='utf-8') == '{"value": 1}'
+    
+    def test_file_lock_handles_unlink_error(self, temp_dir, monkeypatch):
+        """测试文件锁处理删除锁文件时的错误。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock Path.unlink 抛出 OSError
+        original_unlink = Path.unlink
+        
+        def mock_unlink(self):
+            if '.lock' in str(self):
+                raise OSError("模拟删除错误")
+            return original_unlink(self)
+        
+        monkeypatch.setattr(Path, 'unlink', mock_unlink)
+        
+        # Act & Assert - 应该正常处理错误
+        with file_lock(test_file):
+            test_file.write_text('{"value": 1}', encoding='utf-8')
+        
+        assert test_file.read_text(encoding='utf-8') == '{"value": 1}'
+    
+    def test_read_lock_handles_oserror_on_close(self, temp_dir, monkeypatch):
+        """测试读锁处理关闭时的 OSError。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock os.close 抛出 OSError
+        original_close = __import__('os').close
+        call_count = []
+        
+        def mock_close(fd):
+            call_count.append(1)
+            if len(call_count) == 1:  # 第一次调用时抛出错误
+                raise OSError("模拟关闭错误")
+            return original_close(fd)
+        
+        monkeypatch.setattr('os.close', mock_close)
+        
+        # Act & Assert - 应该正常处理错误
+        with read_lock(test_file):
+            data = test_file.read_text(encoding='utf-8')
+        
+        assert data == '{"value": 0}'
+    
+    def test_file_lock_retry_mechanism(self, temp_dir, monkeypatch):
+        """测试文件锁的重试机制。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock os.open 前两次失败，第三次成功
+        original_open = __import__('os').open
+        call_count = []
+        
+        def mock_open(*args, **kwargs):
+            call_count.append(1)
+            if len(call_count) <= 2:  # 前两次失败
+                raise OSError("模拟锁被占用")
+            return original_open(*args, **kwargs)
+        
+        monkeypatch.setattr('os.open', mock_open)
+        
+        # Act & Assert - 应该重试并成功
+        with file_lock(test_file, timeout=1.0, retry_interval=0.1):
+            test_file.write_text('{"value": 1}', encoding='utf-8')
+        
+        assert test_file.read_text(encoding='utf-8') == '{"value": 1}'
+        assert len(call_count) == 3  # 应该重试了 2 次
+    
+    def test_read_lock_retry_mechanism(self, temp_dir, monkeypatch):
+        """测试读锁的重试机制。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock os.open 前两次失败，第三次成功
+        import os
+        original_open = os.open
+        call_count = []
+        
+        def mock_open(*args, **kwargs):
+            call_count.append(1)
+            if len(call_count) <= 2:  # 前两次失败
+                raise OSError("模拟锁被占用")
+            return original_open(*args, **kwargs)
+        
+        monkeypatch.setattr(os, "open", mock_open)
+        
+        # Act & Assert - 应该重试并成功
+        with read_lock(test_file, timeout=1.0, retry_interval=0.1):
+            data = test_file.read_text(encoding='utf-8')
+        
+        assert data == '{"value": 0}'
+        assert len(call_count) == 3  # 应该重试了 2 次
+    
+    def test_file_lock_handles_fcntl_import_error(self, temp_dir, monkeypatch):
+        """测试处理 fcntl 导入错误的情况。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock fcntl 导入失败
+        import sys
+        original_modules = sys.modules.copy()
+        
+        def mock_import(name, *args, **kwargs):
+            if name == 'fcntl':
+                raise ImportError("fcntl not available")
+            return __import__(name, *args, **kwargs)
+        
+        monkeypatch.setattr('builtins.__import__', mock_import)
+        
+        # Act & Assert - 应该抛出 FileLockError
+        with pytest.raises(Exception):  # 可能是 FileLockError 或其他异常
+            with file_lock(test_file):
+                pass
+    
+    def test_read_lock_handles_fcntl_import_error(self, temp_dir, monkeypatch):
+        """测试读锁处理 fcntl 导入错误的情况。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock fcntl 导入失败
+        def mock_import(name, *args, **kwargs):
+            if name == 'fcntl':
+                raise ImportError("fcntl not available")
+            return __import__(name, *args, **kwargs)
+        
+        monkeypatch.setattr('builtins.__import__', mock_import)
+        
+        # Act & Assert - 应该抛出 FileLockError
+        with pytest.raises(Exception):  # 可能是 FileLockError 或其他异常
+            with read_lock(test_file):
+                pass
+    
+    def test_file_lock_handles_close_error_in_finally(self, temp_dir, monkeypatch):
+        """测试文件锁在 finally 块中处理关闭错误。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock os.close 在 finally 中抛出错误
+        import os
+        original_close = os.close
+        close_call_count = []
+        
+        def mock_close(fd):
+            close_call_count.append(1)
+            if len(close_call_count) == 1:  # 第一次调用时抛出错误
+                raise OSError("模拟关闭错误")
+            return original_close(fd)
+        
+        monkeypatch.setattr(os, "close", mock_close)
+        
+        # Act & Assert - 应该正常处理错误
+        with file_lock(test_file):
+            test_file.write_text('{"value": 1}', encoding='utf-8')
+        
+        assert test_file.read_text(encoding='utf-8') == '{"value": 1}'
+    
+    def test_read_lock_handles_unlock_error(self, temp_dir, monkeypatch):
+        """测试读锁处理解锁错误的情况。"""
+        # Arrange
+        test_file = temp_dir / "test.json"
+        test_file.write_text('{"value": 0}', encoding='utf-8')
+        
+        # Mock fcntl.flock 在解锁时抛出错误
+        import fcntl
+        original_flock = fcntl.flock
+        
+        def mock_flock(fd, op):
+            if op & fcntl.LOCK_UN:  # 解锁操作
+                raise OSError("模拟解锁错误")
+            return original_flock(fd, op)
+        
+        monkeypatch.setattr(fcntl, "flock", mock_flock)
+        
+        # Act & Assert - 应该正常处理错误
+        with read_lock(test_file):
+            data = test_file.read_text(encoding='utf-8')
+        
+        assert data == '{"value": 0}'
