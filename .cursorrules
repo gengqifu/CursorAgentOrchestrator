@@ -1,0 +1,36 @@
+# Cursor Agent Orchestrator 项目规则
+
+## Python 版本要求
+
+**本项目严格要求使用 Python 3.9 或更高版本**
+
+- 所有代码必须在 Python 3.9+ 环境下运行
+- 使用 Python 3.9+ 的类型提示语法（内置类型 `dict`, `list` 而非 `Dict`, `List`）
+- 所有命令使用 `python3` 而非 `python`
+
+## Git 提交信息规范
+
+**所有 Git 提交信息必须使用中文**
+
+格式：`<类型>: <简短描述>`
+
+示例：
+- `feat: 添加工作区管理器功能`
+- `fix: 修复日志写入已关闭文件流的错误`
+- `docs: 更新安装指南`
+- `test: 添加工作区管理器测试用例`
+
+## TDD 开发模式
+
+本项目严格遵循 TDD（测试驱动开发）：
+1. Red: 先写失败的测试
+2. Green: 写最小实现让测试通过
+3. Refactor: 重构改进代码
+
+测试覆盖率要求：>= 90%
+
+## 详细规范
+
+- 项目规则：`.cursor/rules/project.md`
+- Python 编码规范：`.cursor/rules/python.md`
+- TDD 规范：`.cursor/rules/tdd.md`

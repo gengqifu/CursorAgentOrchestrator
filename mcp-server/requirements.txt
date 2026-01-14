@@ -1,0 +1,18 @@
+# Python 版本要求：>= 3.9
+# Python Version Requirement: >= 3.9
+
+# MCP Server 依赖
+mcp>=0.1.0
+pydantic>=2.0.0
+
+# 开发依赖
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.11.0
+
+# 代码质量工具
+black>=23.0.0
+ruff>=0.1.0
+mypy>=1.5.0
+isort>=5.12.0
