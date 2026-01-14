@@ -198,18 +198,23 @@ python src\main.py
 4. **get_tasks** - 获取任务列表
 5. **update_task_status** - 更新任务状态
 
-### Skills（Agent 直接调用）
+### 8 个 SKILL 工具（符合 PDF 架构）
 
-Agent 可以通过执行 skill 脚本来使用以下 8 个核心 skills：
+以下 8 个核心 SKILL 工具通过 MCP Server 暴露，符合 PDF 文档架构：
 
-1. **prd-generator** - 生成 PRD 文档
-2. **trd-generator** - 生成 TRD 文档
-3. **task-decomposer** - 分解任务
-4. **code-generator** - 生成代码
-5. **code-reviewer** - 审查代码
-6. **test-generator** - 生成测试
-7. **test-reviewer** - 审查测试
-8. **coverage-analyzer** - 分析覆盖率
+1. **generate_prd** - 生成 PRD 文档（SKILL: prd-generator）
+2. **generate_trd** - 生成 TRD 文档（SKILL: trd-generator）
+3. **decompose_tasks** - 分解任务（SKILL: task-decomposer）
+4. **generate_code** - 生成代码（SKILL: code-generator）
+5. **review_code** - 审查代码（SKILL: code-reviewer）
+6. **generate_tests** - 生成测试（SKILL: test-generator）
+7. **review_tests** - 审查测试（SKILL: test-reviewer）
+8. **analyze_coverage** - 分析覆盖率（SKILL: coverage-analyzer）
+
+**架构说明**（符合 PDF 文档）：
+- 所有工具都通过 **MCP Server** 暴露
+- MCP Server 作为中央编排服务，直接调用 8 个子 SKILL 模块
+- 调用流程：Cursor CLI → MCP Server → 8个子SKILL模块 → 项目代码仓库
 
 ## 工作流程示例
 
@@ -220,29 +225,29 @@ Agent 可以通过执行 skill 脚本来使用以下 8 个核心 skills：
    @agent-orchestrator create_workspace
    ```
 
-2. **生成 PRD**（Agent 执行 skill）
+2. **生成 PRD**（通过 MCP 工具）
    ```
-   Agent 执行: python3 skills/prd-generator/scripts/prd_generator.py req-001 /path/to/req.md
-   ```
-
-3. **生成 TRD**（Agent 执行 skill）
-   ```
-   Agent 执行: python3 skills/trd-generator/scripts/trd_generator.py req-001
+   @agent-orchestrator generate_prd workspace_id="req-001" requirement_url="/path/to/req.md"
    ```
 
-4. **分解任务**（Agent 执行 skill）
+3. **生成 TRD**（通过 MCP 工具）
    ```
-   Agent 执行: python3 skills/task-decomposer/scripts/task_decomposer.py req-001
-   ```
-
-5. **生成代码**（Agent 执行 skill）
-   ```
-   Agent 执行: python3 skills/code-generator/scripts/code_generator.py req-001 task-001
+   @agent-orchestrator generate_trd workspace_id="req-001"
    ```
 
-6. **审查代码**
+4. **分解任务**（通过 MCP 工具）
    ```
-   @agent-orchestrator review_code workspace_id task_id
+   @agent-orchestrator decompose_tasks workspace_id="req-001"
+   ```
+
+5. **生成代码**（通过 MCP 工具）
+   ```
+   @agent-orchestrator generate_code workspace_id="req-001" task_id="task-001"
+   ```
+
+6. **审查代码**（通过 MCP 工具）
+   ```
+   @agent-orchestrator review_code workspace_id="req-001" task_id="task-001"
    ```
 
 7. **生成测试**

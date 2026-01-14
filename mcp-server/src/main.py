@@ -121,42 +121,17 @@ if __name__ == "__main__":
     logger.info("提示：使用 Ctrl+C 关闭 Server")
     
     try:
-        # TODO: 实现 MCP Server 主逻辑
-        # 当通过 stdio 运行时，如果 stdin 关闭，循环会自动退出
-        logger.info("MCP Server 已启动，等待连接...")
+        # 导入并运行 MCP Server
+        import asyncio
+        from src.mcp_server import run_server
         
-        # 模拟主循环（实际实现时会使用 MCP Server 的事件循环）
-        # 当 stdin 关闭时，readline() 会抛出异常或返回空
-        while not _shutdown_requested:
-            try:
-                # 尝试读取 stdin（阻塞或非阻塞取决于配置）
-                # 当 stdin 关闭时，readline() 会返回空字符串
-                if sys.stdin.isatty():
-                    # 交互式终端模式 - 等待用户输入或 Ctrl+C
-                    import select
-                    if select.select([sys.stdin], [], [], 0.1)[0]:
-                        line = sys.stdin.readline()
-                        if not line:  # EOF
-                            safe_log_info("检测到 stdin 关闭，准备退出...")
-                            break
-                else:
-                    # 非交互式模式（通过管道运行）- 等待数据或 EOF
-                    line = sys.stdin.readline()
-                    if not line:  # EOF - stdin 已关闭
-                        safe_log_info("检测到 stdin 关闭，准备退出...")
-                        break
-            except (EOFError, KeyboardInterrupt):
-                safe_log_info("检测到输入流关闭或中断")
-                break
-            except Exception as e:
-                # 其他错误（如 select 在 Windows 上不支持）
-                try:
-                    logger.debug(f"读取 stdin 时出错: {e}")
-                except (ValueError, AttributeError, OSError):
-                    pass
-                # 短暂休眠后继续
-                import time
-                time.sleep(0.1)
+        logger.info("MCP Server 已启动，等待连接...")
+        logger.info("可用工具：")
+        logger.info("  基础设施工具：create_workspace, get_workspace, update_workspace_status, get_tasks, update_task_status")
+        logger.info("  SKILL 工具：generate_prd, generate_trd, decompose_tasks, generate_code, review_code, generate_tests, review_tests, analyze_coverage")
+        
+        # 运行 MCP Server（使用 stdio 通信）
+        asyncio.run(run_server())
         
     except KeyboardInterrupt:
         safe_log_info("收到键盘中断信号")

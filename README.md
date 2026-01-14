@@ -234,10 +234,11 @@ CursorAgentOrchestrator/
 └── README.md                     # 项目说明
 ```
 
-**架构说明**：
-- **Skills** (`skills/`)：自包含的 skill 定义，包含 SKILL.md 和 scripts/入口脚本
-- **MCP Server** (`mcp-server/`)：提供基础设施工具（工作区管理），不直接调用工具
-- **Agent 调用流程**：Agent 根据 prompt 选择 skill，直接执行 `skills/*/scripts/*.py`
+**架构说明**（符合 PDF 文档）：
+- **Cursor CLI**：用户界面层（命令行或 Cursor IDE），对应 PDF 中的 "Kiro CLI"
+- **MCP Server** (`mcp-server/`)：中央编排服务，通过 MCP 协议暴露所有工具（基础设施工具 + 8 个 SKILL 工具）
+- **8个子SKILL模块** (`mcp-server/src/tools/`)：核心业务逻辑，通过 MCP Server 调用
+- **调用流程**：Cursor CLI → MCP Server → 8个子SKILL模块 → 项目代码仓库
 
 ## 🛠️ 8 个核心 SKILL 工具
 
