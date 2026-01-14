@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "agent-orchestrator": {
+      "command": "/absolute/path/to/mcp-server/start_mcp_server.sh",
+      "args": [],
+      "env": {
+        "AGENT_ORCHESTRATOR_ROOT": "/path/to/your/project",
+        "GEMINI_API_KEY": "your-gemini-api-key-optional",
+        "CLAUDE_API_KEY": "your-claude-api-key-optional",
+        "MAX_RETRY_ATTEMPTS": "3",
+        "MAX_REVIEW_CYCLES": "5"
+      }
+    }
+  }
+}
