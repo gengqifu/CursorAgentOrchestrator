@@ -92,16 +92,18 @@
 
 #### 1.4 编写单元测试（TDD）
 
-- [ ] 创建测试文件：`mcp-server/tests/tools/test_orchestrator_questions.py`
-- [ ] 编写测试用例：
-  - [ ] `test_ask_orchestrator_questions` - 测试询问问题
-  - [ ] `test_submit_orchestrator_answers_success` - 测试提交答案成功
-  - [ ] `test_submit_orchestrator_answers_missing_required` - 测试缺少必填项
-  - [ ] `test_submit_orchestrator_answers_invalid_path` - 测试无效路径
-- [ ] 运行测试：`pytest mcp-server/tests/tools/test_orchestrator_questions.py -v`
-- [ ] 确保所有测试通过
-- [ ] 检查测试覆盖率：`pytest --cov=src/tools/orchestrator_questions --cov-report=term-missing`
-- [ ] 确保覆盖率 >= 90%
+- [x] 创建测试文件：`mcp-server/tests/tools/test_orchestrator_questions.py`
+- [x] 编写测试用例：
+  - [x] `test_ask_orchestrator_questions` - 测试询问问题
+  - [x] `test_submit_orchestrator_answers_success` - 测试提交答案成功
+  - [x] `test_submit_orchestrator_answers_missing_required` - 测试缺少必填项（包含6个子测试）
+  - [x] `test_submit_orchestrator_answers_invalid_path` - 测试无效路径（包含2个子测试）
+  - [x] `test_submit_orchestrator_answers_workspace_creation_error` - 测试创建工作区异常
+  - [x] `test_submit_orchestrator_answers_workspace_manager_validation_error` - 测试 ValidationError 重新抛出
+- [x] 运行测试：`pytest mcp-server/tests/tools/test_orchestrator_questions.py -v` - ✅ 所有6个测试通过
+- [x] 确保所有测试通过 - ✅ 所有测试通过
+- [x] 检查测试覆盖率：`pytest --cov=src/tools/orchestrator_questions --cov-report=term-missing` - ✅ 覆盖率 100%
+- [x] 确保覆盖率 >= 90% - ✅ 覆盖率 100%（35/35 行）
 
 **备注**：_________________________________
 
