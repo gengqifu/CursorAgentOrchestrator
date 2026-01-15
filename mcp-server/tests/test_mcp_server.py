@@ -349,6 +349,16 @@ class TestMCPServer:
         with open(tasks_file, "w", encoding="utf-8") as f:
             json.dump(tasks_data, f, ensure_ascii=False, indent=2)
 
+        # 设置工作区状态为任务分解已完成
+        workspace = workspace_manager.get_workspace(workspace_id)
+        workspace["status"]["tasks_status"] = "completed"
+        meta_file = (
+            Path(workspace_manager.config.get_workspace_path(workspace_id))
+            / "workspace.json"
+        )
+        with open(meta_file, "w", encoding="utf-8") as f:
+            json.dump(workspace, f, ensure_ascii=False, indent=2)
+
         # Mock mcp_server 模块中的 workspace_manager
         with patch("src.mcp_server.workspace_manager", workspace_manager):
             result = await call_tool(
@@ -409,10 +419,35 @@ class TestMCPServer:
 
     @pytest.mark.asyncio
     async def test_call_tool_generate_tests(
-        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir, temp_dir
     ):
         """测试 generate_tests 工具。"""
         workspace_id = create_test_workspace_fixture
+
+        # 先创建 tasks.json，包含已完成的任务
+        tasks_file = (
+            Path(workspace_manager.config.get_workspace_path(workspace_id))
+            / "tasks.json"
+        )
+        tasks_data = {
+            "workspace_id": workspace_id,
+            "tasks": [
+                {
+                    "task_id": "task-001",
+                    "description": "测试任务",
+                    "status": "completed",
+                    "code_files": [str(temp_dir / "test.py")],
+                }
+            ],
+        }
+        import json
+
+        with open(tasks_file, "w", encoding="utf-8") as f:
+            json.dump(tasks_data, f, ensure_ascii=False, indent=2)
+
+        # 创建代码文件
+        code_file = temp_dir / "test.py"
+        code_file.write_text("def test(): pass", encoding="utf-8")
 
         # Mock mcp_server 模块中的 workspace_manager
         with patch("src.mcp_server.workspace_manager", workspace_manager):
