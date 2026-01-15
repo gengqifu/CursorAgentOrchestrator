@@ -109,25 +109,25 @@
 
 #### 1.5 集成到 MCP Server
 
-- [ ] 在 `mcp_server.py` 中导入：
+- [x] 在 `mcp_server.py` 中导入：
   ```python
   from src.tools.orchestrator_questions import (
       ask_orchestrator_questions,
       submit_orchestrator_answers
   )
   ```
-- [ ] 在 `list_tools()` 函数中添加工具定义：
-  - [ ] `ask_orchestrator_questions` 工具
-  - [ ] `submit_orchestrator_answers` 工具
-- [ ] 在 `call_tool()` 函数中添加处理逻辑：
-  - [ ] 处理 `ask_orchestrator_questions` 调用
-  - [ ] 处理 `submit_orchestrator_answers` 调用
-- [ ] 添加错误处理
+- [x] 在 `list_tools()` 函数中添加工具定义：
+  - [x] `ask_orchestrator_questions` 工具（已添加到工作流编排工具部分）
+  - [x] `submit_orchestrator_answers` 工具（已添加到工作流编排工具部分）
+- [x] 在 `call_tool()` 函数中添加处理逻辑：
+  - [x] 处理 `ask_orchestrator_questions` 调用
+  - [x] 处理 `submit_orchestrator_answers` 调用
+- [x] 添加错误处理（使用统一的 `_handle_error` 函数）
 
 **测试检查点**：
-- [ ] `list_tools()` 返回包含新工具
-- [ ] `call_tool("ask_orchestrator_questions", {})` 正常工作
-- [ ] `call_tool("submit_orchestrator_answers", {...})` 正常工作
+- [x] `list_tools()` 返回包含新工具（已添加工具定义）
+- [ ] `call_tool("ask_orchestrator_questions", {})` 正常工作 - 待集成测试验证
+- [ ] `call_tool("submit_orchestrator_answers", {...})` 正常工作 - 待集成测试验证
 
 #### 1.6 编写集成测试
 

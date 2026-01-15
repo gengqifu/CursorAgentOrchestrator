@@ -24,6 +24,12 @@ from src.core.exceptions import (
 from src.managers.workspace_manager import WorkspaceManager
 from src.managers.task_manager import TaskManager
 
+# 导入工作流编排工具
+from src.tools.orchestrator_questions import (
+    ask_orchestrator_questions,
+    submit_orchestrator_answers
+)
+
 # 导入 8 个 SKILL 工具
 from src.tools.prd_generator import generate_prd
 from src.tools.trd_generator import generate_trd
@@ -136,6 +142,30 @@ async def list_tools() -> list[Tool]:
                     "updates": {"type": "object", "description": "其他更新字段"}
                 },
                 "required": ["workspace_id", "task_id", "status"]
+            }
+        ),
+        # 工作流编排工具
+        Tool(
+            name="ask_orchestrator_questions",
+            description="询问总编排器4个问题（项目路径、需求名称、需求URL、工作区路径）",
+            inputSchema={
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        ),
+        Tool(
+            name="submit_orchestrator_answers",
+            description="提交总编排器答案并创建工作区",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_path": {"type": "string", "description": "项目路径（必填）"},
+                    "requirement_name": {"type": "string", "description": "需求名称（必填）"},
+                    "requirement_url": {"type": "string", "description": "需求URL或文件路径（必填）"},
+                    "workspace_path": {"type": "string", "description": "工作区路径（可选）"}
+                },
+                "required": ["project_path", "requirement_name", "requirement_url"]
             }
         ),
         # 8 个 SKILL 工具
@@ -321,6 +351,25 @@ async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextCon
                     text=json.dumps({
                         "success": True
                     }, ensure_ascii=False)
+                )
+            ]
+        
+        # 工作流编排工具
+        elif name == "ask_orchestrator_questions":
+            result = ask_orchestrator_questions()
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        elif name == "submit_orchestrator_answers":
+            result = submit_orchestrator_answers(arguments)
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
                 )
             ]
         
