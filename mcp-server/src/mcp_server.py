@@ -35,6 +35,7 @@ from src.tools.prd_confirmation import check_prd_confirmation, confirm_prd, modi
 
 # 导入 8 个 SKILL 工具
 from src.tools.prd_generator import generate_prd
+from src.tools.stage_dependency_checker import check_stage_ready
 from src.tools.task_decomposer import decompose_tasks
 from src.tools.task_executor import execute_all_tasks, execute_task
 from src.tools.test_generator import generate_tests
@@ -435,6 +436,22 @@ async def list_tools() -> list[Tool]:
                 "required": ["workspace_id"],
             },
         ),
+        # 阶段依赖检查工具
+        Tool(
+            name="check_stage_ready",
+            description="检查阶段是否可以开始（验证前置阶段依赖和文件依赖）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"},
+                    "stage": {
+                        "type": "string",
+                        "description": "阶段名称（prd, trd, tasks, code, test, coverage）",
+                    },
+                },
+                "required": ["workspace_id", "stage"],
+            },
+        ),
     ]
 
 
@@ -698,6 +715,15 @@ async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextCon
         # 工作流状态查询工具
         elif name == "get_workflow_status":
             result = get_workflow_status(workspace_id=arguments["workspace_id"])
+            return [
+                TextContent(type="text", text=json.dumps(result, ensure_ascii=False))
+            ]
+
+        # 阶段依赖检查工具
+        elif name == "check_stage_ready":
+            result = check_stage_ready(
+                workspace_id=arguments["workspace_id"], stage=arguments["stage"]
+            )
             return [
                 TextContent(type="text", text=json.dumps(result, ensure_ascii=False))
             ]

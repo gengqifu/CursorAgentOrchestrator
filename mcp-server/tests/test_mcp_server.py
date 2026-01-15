@@ -25,8 +25,8 @@ class TestMCPServer:
         tools = await list_tools()
 
         assert (
-            len(tools) == 26
-        )  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 2 个测试路径询问工具 + 2 个任务执行工具 + 1 个工作流状态查询工具 + 8 个 SKILL 工具
+            len(tools) == 27
+        )  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 2 个测试路径询问工具 + 2 个任务执行工具 + 1 个工作流状态查询工具 + 1 个阶段依赖检查工具 + 8 个 SKILL 工具
 
         # 检查基础设施工具
         tool_names = [tool.name for tool in tools]
@@ -1419,3 +1419,192 @@ class TestMCPServer:
         assert data["success"] is False
         assert "error" in data
         assert "error_type" in data
+
+    @pytest.mark.asyncio
+    async def test_integration_check_stage_ready_prd(
+        self, create_test_workspace_fixture, workspace_manager
+    ):
+        """集成测试：检查PRD阶段是否可以开始。
+
+        测试完整流程：
+        1. 创建工作区
+        2. 调用 check_stage_ready 通过 MCP，检查 PRD 阶段
+        3. 验证返回 ready=True（PRD无前置依赖）
+        4. 验证 required_stages 为空
+        """
+        workspace_id = create_test_workspace_fixture
+
+        # 调用 check_stage_ready 通过 MCP
+        result = await call_tool(
+            "check_stage_ready",
+            {
+                "workspace_id": workspace_id,
+                "stage": "prd",
+            },
+        )
+
+        # 验证返回结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["stage"] == "prd"
+        assert data["ready"] is True
+        assert data["reason"] == "前置阶段已完成，可以开始"
+        assert data["required_stages"] == []
+        assert data["completed_stages"] == []
+        assert data["pending_stages"] == []
+        assert data["in_progress_stages"] == []
+        assert data["file_ready"] is True
+
+    @pytest.mark.asyncio
+    async def test_integration_check_stage_ready_trd_with_prd_completed(
+        self, create_test_workspace_fixture, workspace_manager
+    ):
+        """集成测试：检查TRD阶段是否可以开始（PRD已完成）。
+
+        测试完整流程：
+        1. 创建工作区
+        2. 更新 PRD 状态为 completed
+        3. 创建 PRD 文件
+        4. 调用 check_stage_ready 通过 MCP，检查 TRD 阶段
+        5. 验证返回 ready=True（PRD已完成且文件存在）
+        """
+        workspace_id = create_test_workspace_fixture
+
+        # 更新PRD状态为已完成
+        workspace_manager.update_workspace_status(
+            workspace_id, {"prd_status": "completed"}
+        )
+
+        # 创建PRD文件
+        from src.core.config import Config
+        from src.utils.file_lock import file_lock
+
+        config = Config()
+        workspace_dir = config.get_workspace_path(workspace_id)
+        prd_file = workspace_dir / "PRD.md"
+        prd_file.write_text("# PRD: 测试需求\n\n这是测试PRD内容")
+
+        # 更新文件路径（直接写入 workspace.json）
+        meta_file = workspace_dir / "workspace.json"
+        with file_lock(meta_file):
+            with open(meta_file, encoding="utf-8") as f:
+                workspace = json.load(f)
+            workspace["files"]["prd_path"] = str(prd_file)
+            with open(meta_file, "w", encoding="utf-8") as f:
+                json.dump(workspace, f, ensure_ascii=False, indent=2)
+
+        # 调用 check_stage_ready 通过 MCP
+        result = await call_tool(
+            "check_stage_ready",
+            {
+                "workspace_id": workspace_id,
+                "stage": "trd",
+            },
+        )
+
+        # 验证返回结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["stage"] == "trd"
+        assert data["ready"] is True
+        assert data["reason"] == "前置阶段已完成，可以开始"
+        assert data["required_stages"] == ["prd"]
+        assert data["completed_stages"] == ["prd"]
+        assert data["pending_stages"] == []
+        assert data["in_progress_stages"] == []
+        assert data["file_ready"] is True
+
+    @pytest.mark.asyncio
+    async def test_integration_check_stage_ready_trd_with_prd_pending(
+        self, create_test_workspace_fixture, workspace_manager
+    ):
+        """集成测试：检查TRD阶段是否可以开始（PRD未完成）。
+
+        测试完整流程：
+        1. 创建工作区
+        2. 调用 check_stage_ready 通过 MCP，检查 TRD 阶段
+        3. 验证返回 ready=False（PRD未完成）
+        4. 验证 pending_stages 包含 prd
+        """
+        workspace_id = create_test_workspace_fixture
+
+        # 调用 check_stage_ready 通过 MCP
+        result = await call_tool(
+            "check_stage_ready",
+            {
+                "workspace_id": workspace_id,
+                "stage": "trd",
+            },
+        )
+
+        # 验证返回结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["stage"] == "trd"
+        assert data["ready"] is False
+        assert "前置阶段未完成" in data["reason"]
+        assert "prd" in data["reason"]
+        assert data["required_stages"] == ["prd"]
+        assert data["completed_stages"] == []
+        assert data["pending_stages"] == ["prd"]
+        assert data["in_progress_stages"] == []
+
+    @pytest.mark.asyncio
+    async def test_integration_check_stage_ready_invalid_stage(
+        self, create_test_workspace_fixture
+    ):
+        """集成测试：检查阶段是否可以开始（无效阶段）。
+
+        测试错误处理：
+        1. 创建工作区
+        2. 调用 check_stage_ready 通过 MCP，使用无效的阶段名称
+        3. 验证返回错误响应
+        """
+        workspace_id = create_test_workspace_fixture
+
+        # 调用 check_stage_ready 通过 MCP，使用无效的阶段名称
+        result = await call_tool(
+            "check_stage_ready",
+            {
+                "workspace_id": workspace_id,
+                "stage": "invalid_stage",
+            },
+        )
+
+        # 验证错误响应
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is False
+        assert "error" in data
+        assert "未知阶段" in data["error"]
+
+    @pytest.mark.asyncio
+    async def test_integration_check_stage_ready_workspace_not_found(self):
+        """集成测试：检查阶段是否可以开始（工作区不存在）。
+
+        测试错误处理：
+        1. 调用 check_stage_ready 通过 MCP，使用不存在的工作区ID
+        2. 验证返回错误响应
+        """
+        # 调用 check_stage_ready 通过 MCP，使用不存在的工作区ID
+        result = await call_tool(
+            "check_stage_ready",
+            {
+                "workspace_id": "non-existent-workspace",
+                "stage": "prd",
+            },
+        )
+
+        # 验证错误响应
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is False
+        assert "error" in data

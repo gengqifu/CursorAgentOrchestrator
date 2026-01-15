@@ -548,8 +548,8 @@
 
 #### 9.5 代码质量检查和提交
 
-- [ ] 代码质量检查
-- [ ] Git 提交：`git commit -m "feat: 实现 workflow_status 工具"`
+- [x] 代码质量检查 - ✅ 已完成（Black、Ruff 检查通过）
+- [x] Git 提交：`git commit -m "feat: 实现 workflow_status 工具"` - ✅ 已完成
 
 **备注**：_________________________________
 
@@ -559,8 +559,8 @@
 
 #### 10.1 创建文件结构
 
-- [ ] 创建文件：`mcp-server/src/tools/stage_dependency_checker.py`
-- [ ] 定义阶段依赖关系常量：
+- [x] 创建文件：`mcp-server/src/tools/stage_dependency_checker.py` - ✅ 已完成
+- [x] 定义阶段依赖关系常量：
   ```python
   STAGE_DEPENDENCIES = {
       "prd": [],
@@ -571,17 +571,18 @@
       "coverage": ["test"]
   }
   ```
+  - ✅ 已完成（定义了6个阶段的依赖关系）
 
 #### 10.2 实现 check_stage_ready 函数
 
-- [ ] 实现函数签名和文档字符串
-- [ ] 验证阶段名称
-- [ ] 获取前置阶段
-- [ ] 检查前置阶段状态
-- [ ] 检查文件是否存在（对于有文件依赖的阶段）
-- [ ] 判断是否可以开始
-- [ ] 返回检查结果
-- [ ] 添加错误处理和日志记录
+- [x] 实现函数签名和文档字符串 - ✅ 已完成
+- [x] 验证阶段名称 - ✅ 已实现（检查是否在 STAGE_DEPENDENCIES 中）
+- [x] 获取前置阶段 - ✅ 已实现（从 STAGE_DEPENDENCIES 获取）
+- [x] 检查前置阶段状态 - ✅ 已实现（分类为 completed, pending, in_progress）
+- [x] 检查文件是否存在（对于有文件依赖的阶段） - ✅ 已实现（trd, tasks, code 阶段）
+- [x] 判断是否可以开始 - ✅ 已实现（所有前置阶段 completed 且文件存在）
+- [x] 返回检查结果 - ✅ 已实现（包含详细的依赖信息）
+- [x] 添加错误处理和日志记录 - ✅ 已实现（ValidationError, WorkspaceNotFoundError 处理和日志记录）
 
 **测试检查点**：
 - [ ] PRD 阶段（无依赖）
@@ -592,15 +593,15 @@
 
 #### 10.3 编写单元测试（TDD）
 
-- [ ] 创建测试文件：`mcp-server/tests/tools/test_stage_dependency_checker.py`
-- [ ] 编写5个测试用例
-- [ ] 运行测试并确保通过
-- [ ] 检查测试覆盖率 >= 90%
+- [x] 创建测试文件：`mcp-server/tests/tools/test_stage_dependency_checker.py` - ✅ 已完成
+- [x] 编写5个测试用例 - ✅ 已完成（实际编写了8个测试用例，包括文件不存在、in_progress状态等）
+- [x] 运行测试并确保通过 - ✅ 所有8个测试用例通过
+- [x] 检查测试覆盖率 >= 90% - ✅ `stage_dependency_checker.py` 覆盖率 >= 90%
 
 #### 10.4 集成到 MCP Server
 
-- [ ] 导入、注册、处理逻辑
-- [ ] 编写集成测试
+- [x] 导入、注册、处理逻辑 - ✅ 已完成（导入 check_stage_ready，在 list_tools 中注册，在 call_tool 中处理）
+- [x] 编写集成测试 - ✅ 已完成（编写了5个集成测试用例：PRD阶段、TRD阶段PRD已完成、TRD阶段PRD未完成、无效阶段、工作区不存在）
 
 #### 10.5 代码质量检查和提交
 
