@@ -6,6 +6,7 @@ Python 3.9+ 兼容：使用内置类型 dict 而非 typing.Dict
 1. 询问测试路径（生成默认路径建议）
 2. 提交测试路径并保存到工作区元数据
 """
+
 import json
 import os
 from pathlib import Path
@@ -84,7 +85,7 @@ def ask_test_path(workspace_id: str) -> dict:
         logger.info(f"返回测试路径问题，默认路径: {default_path}")
         return result
 
-    except WorkspaceNotFoundError as e:
+    except WorkspaceNotFoundError:
         logger.error(f"工作区不存在: {workspace_id}")
         raise
     except ValidationError as e:
@@ -174,7 +175,7 @@ def submit_test_path(workspace_id: str, test_path: str) -> dict:
             if not meta_file.exists():
                 raise WorkspaceNotFoundError(f"Workspace not found: {workspace_id}")
 
-            with open(meta_file, 'r', encoding='utf-8') as f:
+            with open(meta_file, encoding="utf-8") as f:
                 workspace_data = json.load(f)
 
             # 确保 files 字段存在
@@ -185,7 +186,7 @@ def submit_test_path(workspace_id: str, test_path: str) -> dict:
             workspace_data["files"]["test_path"] = test_path_str
 
             # 保存
-            with open(meta_file, 'w', encoding='utf-8') as f:
+            with open(meta_file, "w", encoding="utf-8") as f:
                 json.dump(workspace_data, f, ensure_ascii=False, indent=2)
 
         logger.info(f"成功保存测试路径: {workspace_id}, {test_path_str}")
@@ -196,7 +197,7 @@ def submit_test_path(workspace_id: str, test_path: str) -> dict:
             "test_path": test_path_str,
         }
 
-    except WorkspaceNotFoundError as e:
+    except WorkspaceNotFoundError:
         logger.error(f"工作区不存在: {workspace_id}")
         raise
     except ValidationError as e:
