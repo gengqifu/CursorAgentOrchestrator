@@ -42,6 +42,7 @@ from src.tools.test_path_question import ask_test_path, submit_test_path
 from src.tools.test_reviewer import review_tests
 from src.tools.trd_confirmation import check_trd_confirmation, confirm_trd, modify_trd
 from src.tools.trd_generator import generate_trd
+from src.tools.workflow_status import get_workflow_status
 
 logger = setup_logger(__name__)
 
@@ -422,6 +423,18 @@ async def list_tools() -> list[Tool]:
                 "required": ["workspace_id"],
             },
         ),
+        # 工作流状态查询工具
+        Tool(
+            name="get_workflow_status",
+            description="获取工作流状态（各阶段状态、进度、可开始的阶段、被阻塞的阶段）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"},
+                },
+                "required": ["workspace_id"],
+            },
+        ),
     ]
 
 
@@ -678,6 +691,13 @@ async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextCon
                 workspace_id=arguments["workspace_id"],
                 max_review_retries=max_review_retries,
             )
+            return [
+                TextContent(type="text", text=json.dumps(result, ensure_ascii=False))
+            ]
+
+        # 工作流状态查询工具
+        elif name == "get_workflow_status":
+            result = get_workflow_status(workspace_id=arguments["workspace_id"])
             return [
                 TextContent(type="text", text=json.dumps(result, ensure_ascii=False))
             ]

@@ -25,8 +25,8 @@ class TestMCPServer:
         tools = await list_tools()
 
         assert (
-            len(tools) == 25
-        )  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 2 个测试路径询问工具 + 2 个任务执行工具 + 8 个 SKILL 工具
+            len(tools) == 26
+        )  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 2 个测试路径询问工具 + 2 个任务执行工具 + 1 个工作流状态查询工具 + 8 个 SKILL 工具
 
         # 检查基础设施工具
         tool_names = [tool.name for tool in tools]
@@ -57,6 +57,9 @@ class TestMCPServer:
         # 检查任务执行工具
         assert "execute_task" in tool_names
         assert "execute_all_tasks" in tool_names
+
+        # 检查工作流状态查询工具
+        assert "get_workflow_status" in tool_names
 
         # 检查 SKILL 工具
         assert "generate_prd" in tool_names
@@ -1290,3 +1293,129 @@ class TestMCPServer:
         # 验证 generate_code 和 review_code 被调用了3次（每个任务1次）
         assert mock_generate.call_count == 3
         assert mock_review.call_count == 3
+
+    @pytest.mark.asyncio
+    async def test_integration_get_workflow_status_initial(
+        self, create_test_workspace_fixture, workspace_manager
+    ):
+        """集成测试：获取工作流状态（初始状态）。
+
+        测试完整流程：
+        1. 创建工作区
+        2. 调用 get_workflow_status 通过 MCP
+        3. 验证返回初始状态（所有阶段为 pending）
+        4. 验证 PRD 阶段 ready=True
+        5. 验证其他阶段 ready=False
+        6. 验证进度为 0%
+        """
+        workspace_id = create_test_workspace_fixture
+
+        # 调用 get_workflow_status 通过 MCP
+        result = await call_tool(
+            "get_workflow_status",
+            {
+                "workspace_id": workspace_id,
+            },
+        )
+
+        # 验证结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["workspace_id"] == workspace_id
+        assert "stages" in data
+        assert "next_available_stages" in data
+        assert "blocked_stages" in data
+        assert "workflow_progress" in data
+
+        # 验证各阶段状态
+        stages = data["stages"]
+        assert stages["prd"]["status"] == "pending"
+        assert stages["prd"]["ready"] is True
+        assert stages["trd"]["status"] == "pending"
+        assert stages["trd"]["ready"] is False
+
+        # 验证可开始和被阻塞的阶段
+        assert "prd" in data["next_available_stages"]
+        assert "trd" in data["blocked_stages"]
+
+        # 验证进度
+        progress = data["workflow_progress"]
+        assert progress["completed_stages"] == 0
+        assert progress["total_stages"] == 6
+        assert progress["progress_percentage"] == 0.0
+
+    @pytest.mark.asyncio
+    async def test_integration_get_workflow_status_prd_completed(
+        self, create_test_workspace_fixture, workspace_manager
+    ):
+        """集成测试：获取工作流状态（PRD 已完成）。
+
+        测试完整流程：
+        1. 创建工作区
+        2. 更新 PRD 状态为 completed
+        3. 调用 get_workflow_status 通过 MCP
+        4. 验证 PRD 状态为 completed
+        5. 验证 TRD 阶段 ready=True
+        6. 验证进度为 16.67%
+        """
+        workspace_id = create_test_workspace_fixture
+
+        # 更新 PRD 状态为已完成
+        workspace_manager.update_workspace_status(
+            workspace_id, {"prd_status": "completed"}
+        )
+
+        # 调用 get_workflow_status 通过 MCP
+        result = await call_tool(
+            "get_workflow_status",
+            {
+                "workspace_id": workspace_id,
+            },
+        )
+
+        # 验证结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+
+        # 验证 PRD 状态
+        stages = data["stages"]
+        assert stages["prd"]["status"] == "completed"
+        assert stages["prd"]["ready"] is True
+
+        # 验证 TRD 可以开始
+        assert stages["trd"]["status"] == "pending"
+        assert stages["trd"]["ready"] is True
+        assert "trd" in data["next_available_stages"]
+
+        # 验证进度
+        progress = data["workflow_progress"]
+        assert progress["completed_stages"] == 1
+        assert progress["progress_percentage"] == pytest.approx(16.67, abs=0.01)
+
+    @pytest.mark.asyncio
+    async def test_integration_get_workflow_status_workspace_not_found(self):
+        """集成测试：获取工作流状态（工作区不存在）。
+
+        测试错误处理：
+        1. 调用 get_workflow_status 通过 MCP，使用不存在的工作区ID
+        2. 验证返回错误响应
+        """
+        # 调用 get_workflow_status 通过 MCP，使用不存在的工作区ID
+        result = await call_tool(
+            "get_workflow_status",
+            {
+                "workspace_id": "non-existent-workspace",
+            },
+        )
+
+        # 验证错误响应
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is False
+        assert "error" in data
+        assert "error_type" in data

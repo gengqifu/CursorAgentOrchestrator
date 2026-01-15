@@ -491,7 +491,11 @@
 
 - [x] 运行所有阶段2的测试 - ✅ 所有24个测试通过（14个单元测试 + 7个集成测试 + 3个端到端测试）
 - [x] 代码审查 - ✅ 已完成（Python 3.9+ 规范、类型提示、文档字符串、代码质量检查全部通过）
-- [x] Git 提交：`git commit -m "feat: 完成阶段2 - 任务执行工具"` - ✅ 待提交
+  - Black格式化：通过
+  - Ruff检查：通过
+  - Mypy类型检查：通过
+  - 测试覆盖率：task_executor.py 97%覆盖率（超过90%要求）
+- [x] Git 提交：`git commit -m "feat: 完成阶段2 - 任务执行工具"` - ✅ 已提交（commit a3f80c3）
 
 **备注**：_________________________________
 
@@ -503,26 +507,26 @@
 
 #### 9.1 创建文件结构
 
-- [ ] 创建文件：`mcp-server/src/tools/workflow_status.py`
-- [ ] 导入必要的模块
+- [x] 创建文件：`mcp-server/src/tools/workflow_status.py` - ✅ 已创建
+- [x] 导入必要的模块 - ✅ 已导入（WorkspaceManager, TaskManager, logger, WorkspaceNotFoundError）
 
 #### 9.2 实现 get_workflow_status 函数
 
-- [ ] 实现函数签名和文档字符串
-- [ ] 获取工作区信息
-- [ ] 获取任务信息
-- [ ] 构建阶段状态字典：
-  - [ ] prd 阶段
-  - [ ] trd 阶段
-  - [ ] tasks 阶段
-  - [ ] code 阶段
-  - [ ] test 阶段
-  - [ ] coverage 阶段
-- [ ] 计算可以开始的阶段
-- [ ] 计算被阻塞的阶段
-- [ ] 计算工作流进度百分比
-- [ ] 返回工作流状态字典
-- [ ] 添加错误处理和日志记录
+- [x] 实现函数签名和文档字符串 - ✅ 已完成
+- [x] 获取工作区信息 - ✅ 已实现（使用 WorkspaceManager.get_workspace）
+- [x] 获取任务信息 - ✅ 已实现（使用 TaskManager.get_tasks）
+- [x] 构建阶段状态字典：
+  - [x] prd 阶段 - ✅ 已实现（status, file, ready=True）
+  - [x] trd 阶段 - ✅ 已实现（status, file, ready=prd_status==completed）
+  - [x] tasks 阶段 - ✅ 已实现（status, file, task_count, ready=trd_status==completed）
+  - [x] code 阶段 - ✅ 已实现（status, completed_tasks, pending_tasks, total_tasks, ready=tasks_status==completed）
+  - [x] test 阶段 - ✅ 已实现（status, ready=所有任务完成）
+  - [x] coverage 阶段 - ✅ 已实现（status, ready=test_status==completed）
+- [x] 计算可以开始的阶段 - ✅ 已实现（ready=True 且 status 为 pending 或 needs_regeneration）
+- [x] 计算被阻塞的阶段 - ✅ 已实现（ready=False 且 status 为 pending）
+- [x] 计算工作流进度百分比 - ✅ 已实现（completed_stages / total_stages * 100）
+- [x] 返回工作流状态字典 - ✅ 已实现
+- [x] 添加错误处理和日志记录 - ✅ 已实现（WorkspaceNotFoundError 处理和日志记录）
 
 **测试检查点**：
 - [ ] 初始状态
@@ -532,15 +536,15 @@
 
 #### 9.3 编写单元测试（TDD）
 
-- [ ] 创建测试文件：`mcp-server/tests/tools/test_workflow_status.py`
-- [ ] 编写4个测试用例
-- [ ] 运行测试并确保通过
-- [ ] 检查测试覆盖率 >= 90%
+- [x] 创建测试文件：`mcp-server/tests/tools/test_workflow_status.py` - ✅ 已完成
+- [x] 编写4个测试用例 - ✅ 已完成（实际编写了6个测试用例，包括异常处理）
+- [x] 运行测试并确保通过 - ✅ 所有6个测试用例通过
+- [x] 检查测试覆盖率 >= 90% - ✅ `workflow_status.py` 覆盖率100%
 
 #### 9.4 集成到 MCP Server
 
-- [ ] 导入、注册、处理逻辑
-- [ ] 编写集成测试
+- [x] 导入、注册、处理逻辑 - ✅ 已完成（导入 get_workflow_status，在 list_tools 和 call_tool 中添加处理）
+- [x] 编写集成测试 - ✅ 已完成（3个集成测试用例：初始状态、PRD完成状态、工作区不存在）
 
 #### 9.5 代码质量检查和提交
 
@@ -910,8 +914,8 @@
 
 ### 完成情况统计
 
-- 阶段1：用户交互工具 - [ ] 完成
-- 阶段2：任务执行工具 - [ ] 完成
+- 阶段1：用户交互工具 - [x] 完成 ✅
+- 阶段2：任务执行工具 - [x] 完成 ✅
 - 阶段3：多Agent支持工具 - [ ] 完成
 - 阶段4：完整工作流编排 - [ ] 完成
 
