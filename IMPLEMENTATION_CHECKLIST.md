@@ -327,8 +327,8 @@
 
 #### 4.5 集成到 MCP Server
 
-- [ ] 导入、注册、处理逻辑
-- [ ] 编写集成测试
+- [x] 导入、注册、处理逻辑 - ✅ 已完成（导入 test_path_question，在 list_tools 和 call_tool 中注册）
+- [x] 编写集成测试 - ✅ 已完成（3个集成测试：ask_test_path_via_mcp, submit_test_path_via_mcp, submit_test_path_via_mcp_missing_required）
 
 #### 4.6 代码质量检查和提交
 

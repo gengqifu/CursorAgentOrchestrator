@@ -39,6 +39,10 @@ from src.tools.trd_confirmation import (
     confirm_trd,
     modify_trd
 )
+from src.tools.test_path_question import (
+    ask_test_path,
+    submit_test_path
+)
 
 # 导入 8 个 SKILL 工具
 from src.tools.prd_generator import generate_prd
@@ -244,6 +248,30 @@ async def list_tools() -> list[Tool]:
                     "workspace_id": {"type": "string", "description": "工作区ID"}
                 },
                 "required": ["workspace_id"]
+            }
+        ),
+        # 测试路径询问工具
+        Tool(
+            name="ask_test_path",
+            description="询问测试路径（生成默认路径建议）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"}
+                },
+                "required": ["workspace_id"]
+            }
+        ),
+        Tool(
+            name="submit_test_path",
+            description="提交测试路径并保存到工作区元数据",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"},
+                    "test_path": {"type": "string", "description": "测试输出目录路径"}
+                },
+                "required": ["workspace_id", "test_path"]
             }
         ),
         # 8 个 SKILL 工具
@@ -500,6 +528,28 @@ async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextCon
         
         elif name == "modify_trd":
             result = modify_trd(arguments["workspace_id"])
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        # 测试路径询问工具
+        elif name == "ask_test_path":
+            result = ask_test_path(arguments["workspace_id"])
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        elif name == "submit_test_path":
+            result = submit_test_path(
+                workspace_id=arguments["workspace_id"],
+                test_path=arguments["test_path"]
+            )
             return [
                 TextContent(
                     type="text",

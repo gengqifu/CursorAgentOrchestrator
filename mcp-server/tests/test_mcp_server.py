@@ -31,7 +31,7 @@ class TestMCPServer:
         """测试 list_tools 返回所有工具。"""
         tools = await list_tools()
         
-        assert len(tools) == 21  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 8 个 SKILL 工具
+        assert len(tools) == 23  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 2 个测试路径询问工具 + 8 个 SKILL 工具
         
         # 检查基础设施工具
         tool_names = [tool.name for tool in tools]
@@ -54,6 +54,10 @@ class TestMCPServer:
         assert "check_trd_confirmation" in tool_names
         assert "confirm_trd" in tool_names
         assert "modify_trd" in tool_names
+        
+        # 检查测试路径询问工具
+        assert "ask_test_path" in tool_names
+        assert "submit_test_path" in tool_names
         
         # 检查 SKILL 工具
         assert "generate_prd" in tool_names
