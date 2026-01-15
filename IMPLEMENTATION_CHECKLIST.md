@@ -313,10 +313,10 @@
 
 #### 4.3 实现 submit_test_path 函数
 
-- [ ] 验证路径有效性
-- [ ] 保存到工作区元数据
-- [ ] 返回提交结果
-- [ ] 添加错误处理和日志记录
+- [x] 验证路径有效性 - ✅ 已实现（验证路径格式、父目录存在性、可写性、目录创建）
+- [x] 保存到工作区元数据 - ✅ 已实现（使用文件锁更新 workspace.json 的 files.test_path 字段）
+- [x] 返回提交结果 - ✅ 已实现（返回 success, workspace_id, test_path）
+- [x] 添加错误处理和日志记录 - ✅ 已实现（处理 WorkspaceNotFoundError, ValidationError, Exception）
 
 #### 4.4 编写单元测试（TDD）
 
