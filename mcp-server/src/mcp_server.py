@@ -34,6 +34,11 @@ from src.tools.prd_confirmation import (
     confirm_prd,
     modify_prd
 )
+from src.tools.trd_confirmation import (
+    check_trd_confirmation,
+    confirm_trd,
+    modify_trd
+)
 
 # 导入 8 个 SKILL 工具
 from src.tools.prd_generator import generate_prd
@@ -199,6 +204,40 @@ async def list_tools() -> list[Tool]:
         Tool(
             name="modify_prd",
             description="标记需要修改 PRD（更新状态为 needs_regeneration）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"}
+                },
+                "required": ["workspace_id"]
+            }
+        ),
+        # TRD 确认工具
+        Tool(
+            name="check_trd_confirmation",
+            description="检查 TRD 文件是否存在并返回确认请求",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"}
+                },
+                "required": ["workspace_id"]
+            }
+        ),
+        Tool(
+            name="confirm_trd",
+            description="确认 TRD（更新状态为 completed）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"}
+                },
+                "required": ["workspace_id"]
+            }
+        ),
+        Tool(
+            name="modify_trd",
+            description="标记需要修改 TRD（更新状态为 needs_regeneration）",
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -433,6 +472,34 @@ async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextCon
         
         elif name == "modify_prd":
             result = modify_prd(arguments["workspace_id"])
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        # TRD 确认工具
+        elif name == "check_trd_confirmation":
+            result = check_trd_confirmation(arguments["workspace_id"])
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        elif name == "confirm_trd":
+            result = confirm_trd(arguments["workspace_id"])
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        elif name == "modify_trd":
+            result = modify_trd(arguments["workspace_id"])
             return [
                 TextContent(
                     type="text",

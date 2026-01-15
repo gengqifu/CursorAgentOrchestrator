@@ -31,7 +31,7 @@ class TestMCPServer:
         """测试 list_tools 返回所有工具。"""
         tools = await list_tools()
         
-        assert len(tools) == 18  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 8 个 SKILL 工具
+        assert len(tools) == 21  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 8 个 SKILL 工具
         
         # 检查基础设施工具
         tool_names = [tool.name for tool in tools]
@@ -49,6 +49,11 @@ class TestMCPServer:
         assert "check_prd_confirmation" in tool_names
         assert "confirm_prd" in tool_names
         assert "modify_prd" in tool_names
+        
+        # 检查 TRD 确认工具
+        assert "check_trd_confirmation" in tool_names
+        assert "confirm_trd" in tool_names
+        assert "modify_trd" in tool_names
         
         # 检查 SKILL 工具
         assert "generate_prd" in tool_names
@@ -674,3 +679,86 @@ class TestMCPServer:
         # 验证状态已更新
         workspace = workspace_manager.get_workspace(workspace_id)
         assert workspace["status"]["prd_status"] == "needs_regeneration"
+
+    @pytest.mark.asyncio
+    async def test_check_trd_confirmation_via_mcp(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """测试通过 MCP 调用 check_trd_confirmation 工具。"""
+        workspace_id = create_test_workspace_fixture
+
+        # 创建 TRD 文件
+        from src.core.config import Config
+        config = Config()
+        workspace_dir = config.get_workspace_path(workspace_id)
+        trd_path = workspace_dir / "TRD.md"
+        trd_path.write_text("# TRD 文档\n\n这是测试 TRD 内容。", encoding='utf-8')
+
+        # 更新工作区文件路径
+        workspace = workspace_manager.get_workspace(workspace_id)
+        workspace["files"]["trd_path"] = str(trd_path)
+        meta_file = workspace_dir / "workspace.json"
+        import json
+        with open(meta_file, 'w', encoding='utf-8') as f:
+            json.dump(workspace, f, ensure_ascii=False, indent=2)
+
+        # Mock mcp_server 模块中的 workspace_manager
+        with patch('src.mcp_server.workspace_manager', workspace_manager):
+            result = await call_tool(
+                "check_trd_confirmation",
+                {"workspace_id": workspace_id}
+            )
+
+        assert len(result) == 1
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["interaction_required"] is True
+        assert data["interaction_type"] == "trd_confirmation"
+        assert "trd_path" in data
+        assert "trd_preview" in data
+
+    @pytest.mark.asyncio
+    async def test_confirm_trd_via_mcp(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """测试通过 MCP 调用 confirm_trd 工具。"""
+        workspace_id = create_test_workspace_fixture
+
+        # Mock mcp_server 模块中的 workspace_manager
+        with patch('src.mcp_server.workspace_manager', workspace_manager):
+            result = await call_tool(
+                "confirm_trd",
+                {"workspace_id": workspace_id}
+            )
+
+        assert len(result) == 1
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert "workspace_id" in data
+
+        # 验证状态已更新
+        workspace = workspace_manager.get_workspace(workspace_id)
+        assert workspace["status"]["trd_status"] == "completed"
+
+    @pytest.mark.asyncio
+    async def test_modify_trd_via_mcp(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """测试通过 MCP 调用 modify_trd 工具。"""
+        workspace_id = create_test_workspace_fixture
+
+        # Mock mcp_server 模块中的 workspace_manager
+        with patch('src.mcp_server.workspace_manager', workspace_manager):
+            result = await call_tool(
+                "modify_trd",
+                {"workspace_id": workspace_id}
+            )
+
+        assert len(result) == 1
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert "workspace_id" in data
+
+        # 验证状态已更新
+        workspace = workspace_manager.get_workspace(workspace_id)
+        assert workspace["status"]["trd_status"] == "needs_regeneration"

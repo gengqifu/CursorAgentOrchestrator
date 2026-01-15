@@ -276,8 +276,13 @@
 
 #### 3.4 集成到 MCP Server
 
-- [ ] 导入、注册、处理逻辑
-- [ ] 编写集成测试
+- [x] 导入、注册、处理逻辑 - ✅ 已完成
+  - [x] 在 `mcp_server.py` 中导入函数 - ✅ 已导入 check_trd_confirmation, confirm_trd, modify_trd
+  - [x] 在 `list_tools()` 中添加工具定义（3个工具） - ✅ 已添加
+  - [x] 在 `call_tool()` 中添加处理逻辑（3个工具） - ✅ 已添加
+  - [x] 添加错误处理 - ✅ 使用统一的 `_handle_error` 函数
+  - [x] 更新 `test_list_tools_returns_all_tools` - ✅ 工具数量从 18 更新为 21
+- [x] 编写集成测试 - ✅ 已添加 3 个集成测试（check_trd_confirmation, confirm_trd, modify_trd），全部通过
 
 #### 3.5 代码质量检查和提交
 
