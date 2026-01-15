@@ -31,7 +31,7 @@ class TestMCPServer:
         """测试 list_tools 返回所有工具。"""
         tools = await list_tools()
         
-        assert len(tools) == 13  # 5 个基础设施工具 + 8 个 SKILL 工具
+        assert len(tools) == 15  # 5 个基础设施工具 + 2 个工作流编排工具 + 8 个 SKILL 工具
         
         # 检查基础设施工具
         tool_names = [tool.name for tool in tools]
@@ -40,6 +40,10 @@ class TestMCPServer:
         assert "update_workspace_status" in tool_names
         assert "get_tasks" in tool_names
         assert "update_task_status" in tool_names
+        
+        # 检查工作流编排工具
+        assert "ask_orchestrator_questions" in tool_names
+        assert "submit_orchestrator_answers" in tool_names
         
         # 检查 SKILL 工具
         assert "generate_prd" in tool_names
@@ -522,3 +526,63 @@ class TestMCPServer:
         data = json.loads(result[0].text)
         assert data["success"] is False
         assert "error" in data
+
+    @pytest.mark.asyncio
+    async def test_ask_orchestrator_questions_via_mcp(self):
+        """测试通过 MCP 调用 ask_orchestrator_questions 工具。"""
+        result = await call_tool("ask_orchestrator_questions", {})
+        
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert result[0].type == "text"
+        
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["interaction_required"] is True
+        assert data["interaction_type"] == "questions"
+        assert "questions" in data
+        assert len(data["questions"]) == 4
+        
+        # 验证问题结构
+        question_ids = [q["id"] for q in data["questions"]]
+        assert "project_path" in question_ids
+        assert "requirement_name" in question_ids
+        assert "requirement_url" in question_ids
+        assert "workspace_path" in question_ids
+
+    @pytest.mark.asyncio
+    async def test_submit_orchestrator_answers_via_mcp(self, temp_dir, sample_project_dir):
+        """测试通过 MCP 调用 submit_orchestrator_answers 工具。"""
+        answers = {
+            "project_path": str(sample_project_dir),
+            "requirement_name": "测试需求",
+            "requirement_url": "https://example.com/requirement.md"
+        }
+        
+        result = await call_tool("submit_orchestrator_answers", answers)
+        
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert result[0].type == "text"
+        
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert "workspace_id" in data
+        assert data["workspace_id"].startswith("req-")
+
+    @pytest.mark.asyncio
+    async def test_submit_orchestrator_answers_via_mcp_missing_required(self):
+        """测试通过 MCP 调用 submit_orchestrator_answers - 缺少必填字段。"""
+        result = await call_tool(
+            "submit_orchestrator_answers",
+            {
+                "project_path": "/tmp",
+                # 缺少 requirement_name 和 requirement_url
+            }
+        )
+        
+        assert len(result) == 1
+        data = json.loads(result[0].text)
+        assert data["success"] is False
+        assert "error" in data
+        assert "必填字段缺失或为空" in data["error"]

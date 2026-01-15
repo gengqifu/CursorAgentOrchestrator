@@ -131,12 +131,14 @@
 
 #### 1.6 编写集成测试
 
-- [ ] 创建或更新测试文件：`mcp-server/tests/test_mcp_server.py`
-- [ ] 添加集成测试：
-  - [ ] `test_ask_orchestrator_questions_via_mcp` - 通过 MCP 调用
-  - [ ] `test_submit_orchestrator_answers_via_mcp` - 通过 MCP 调用
-- [ ] 运行集成测试：`pytest mcp-server/tests/test_mcp_server.py::test_ask_orchestrator_questions_via_mcp -v`
-- [ ] 确保所有集成测试通过
+- [x] 创建或更新测试文件：`mcp-server/tests/test_mcp_server.py`
+- [x] 添加集成测试：
+  - [x] `test_ask_orchestrator_questions_via_mcp` - 通过 MCP 调用
+  - [x] `test_submit_orchestrator_answers_via_mcp` - 通过 MCP 调用
+  - [x] `test_submit_orchestrator_answers_via_mcp_missing_required` - 测试缺少必填字段的错误处理
+  - [x] 更新 `test_list_tools_returns_all_tools` - 验证新工具已注册（15个工具）
+- [x] 运行集成测试：`pytest mcp-server/tests/test_mcp_server.py::test_ask_orchestrator_questions_via_mcp -v` - ✅ 所有测试通过
+- [x] 确保所有集成测试通过 - ✅ 4个集成测试全部通过
 
 #### 1.7 代码质量检查
 
