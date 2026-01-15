@@ -1,0 +1,14 @@
+{
+  "req-20260115-143020-测试需求": {
+    "workspace_id": "req-20260115-143020-测试需求",
+    "project_path": "/var/folders/0l/ths4ffwd75dgpvzvrs2f6gq40000gn/T/tmpa8fcxjv2/sample_project",
+    "requirement_name": "测试需求",
+    "created_at": "2026-01-15T14:30:20.753569"
+  },
+  "req-20260115-143028-测试需求": {
+    "workspace_id": "req-20260115-143028-测试需求",
+    "project_path": "/var/folders/0l/ths4ffwd75dgpvzvrs2f6gq40000gn/T/tmpg3xl0yxs/sample_project",
+    "requirement_name": "测试需求",
+    "created_at": "2026-01-15T14:30:28.303739"
+  }
+}

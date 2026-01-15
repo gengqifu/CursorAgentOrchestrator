@@ -29,6 +29,11 @@ from src.tools.orchestrator_questions import (
     ask_orchestrator_questions,
     submit_orchestrator_answers
 )
+from src.tools.prd_confirmation import (
+    check_prd_confirmation,
+    confirm_prd,
+    modify_prd
+)
 
 # 导入 8 个 SKILL 工具
 from src.tools.prd_generator import generate_prd
@@ -166,6 +171,40 @@ async def list_tools() -> list[Tool]:
                     "workspace_path": {"type": "string", "description": "工作区路径（可选）"}
                 },
                 "required": ["project_path", "requirement_name", "requirement_url"]
+            }
+        ),
+        # PRD 确认工具
+        Tool(
+            name="check_prd_confirmation",
+            description="检查 PRD 文件是否存在并返回确认请求",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"}
+                },
+                "required": ["workspace_id"]
+            }
+        ),
+        Tool(
+            name="confirm_prd",
+            description="确认 PRD（更新状态为 completed）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"}
+                },
+                "required": ["workspace_id"]
+            }
+        ),
+        Tool(
+            name="modify_prd",
+            description="标记需要修改 PRD（更新状态为 needs_regeneration）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "workspace_id": {"type": "string", "description": "工作区ID"}
+                },
+                "required": ["workspace_id"]
             }
         ),
         # 8 个 SKILL 工具
@@ -366,6 +405,34 @@ async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextCon
         
         elif name == "submit_orchestrator_answers":
             result = submit_orchestrator_answers(arguments)
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        # PRD 确认工具
+        elif name == "check_prd_confirmation":
+            result = check_prd_confirmation(arguments["workspace_id"])
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        elif name == "confirm_prd":
+            result = confirm_prd(arguments["workspace_id"])
+            return [
+                TextContent(
+                    type="text",
+                    text=json.dumps(result, ensure_ascii=False)
+                )
+            ]
+        
+        elif name == "modify_prd":
+            result = modify_prd(arguments["workspace_id"])
             return [
                 TextContent(
                     type="text",
