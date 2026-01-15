@@ -54,9 +54,12 @@ pythonpath = ["."]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+norecursedirs = ["src", "venv", ".venv", "__pycache__", ".git", ".mypy_cache", ".pytest_cache", ".ruff_cache"]
 addopts = [
     "--strict-markers",
     "--strict-config",
+    "--ignore=mcp-server/src",
+    "--ignore=src",
     "--cov=src",
     "--cov-report=term-missing",
     "--cov-report=html",
