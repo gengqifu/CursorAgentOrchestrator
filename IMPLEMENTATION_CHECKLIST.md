@@ -149,9 +149,9 @@
 
 #### 1.8 提交代码
 
-- [ ] Git 添加文件：`git add mcp-server/src/tools/orchestrator_questions.py`
-- [ ] Git 添加测试：`git add mcp-server/tests/tools/test_orchestrator_questions.py`
-- [ ] Git 提交：`git commit -m "feat: 实现 orchestrator_questions 工具"`
+- [x] Git 添加文件：`git add mcp-server/src/tools/orchestrator_questions.py` - ✅ 已添加（包含代码质量修复）
+- [x] Git 添加测试：`git add mcp-server/tests/tools/test_orchestrator_questions.py` - ✅ 已在之前提交
+- [x] Git 提交：`git commit -m "feat: 完成1.7-1.8 - 代码质量检查和提交 orchestrator_questions 工具"` - ✅ 已提交
 
 **备注**：_________________________________
 
