@@ -766,3 +766,83 @@ class TestMCPServer:
         # 验证状态已更新
         workspace = workspace_manager.get_workspace(workspace_id)
         assert workspace["status"]["trd_status"] == "needs_regeneration"
+    
+    @pytest.mark.asyncio
+    async def test_ask_test_path_via_mcp(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """测试通过 MCP 调用 ask_test_path 工具。"""
+        workspace_id = create_test_workspace_fixture
+        
+        # Mock mcp_server 模块中的 workspace_manager
+        with patch('src.mcp_server.workspace_manager', workspace_manager):
+            result = await call_tool(
+                "ask_test_path",
+                {"workspace_id": workspace_id}
+            )
+        
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert result[0].type == "text"
+        
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["interaction_required"] is True
+        assert data["interaction_type"] == "question"
+        assert "question" in data
+        assert data["question"]["id"] == "test_path"
+        assert "default" in data["question"]
+        assert str(sample_project_dir) in data["question"]["default"]
+    
+    @pytest.mark.asyncio
+    async def test_submit_test_path_via_mcp(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """测试通过 MCP 调用 submit_test_path 工具。"""
+        workspace_id = create_test_workspace_fixture
+        test_path = str(sample_project_dir / "tests" / "mock")
+        
+        # Mock mcp_server 模块中的 workspace_manager
+        with patch('src.mcp_server.workspace_manager', workspace_manager):
+            result = await call_tool(
+                "submit_test_path",
+                {
+                    "workspace_id": workspace_id,
+                    "test_path": test_path
+                }
+            )
+        
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        assert result[0].type == "text"
+        
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["workspace_id"] == workspace_id
+        assert data["test_path"] == test_path
+        
+        # 验证已保存到工作区元数据
+        workspace = workspace_manager.get_workspace(workspace_id)
+        assert workspace["files"]["test_path"] == test_path
+    
+    @pytest.mark.asyncio
+    async def test_submit_test_path_via_mcp_missing_required(
+        self, create_test_workspace_fixture, workspace_manager
+    ):
+        """测试通过 MCP 调用 submit_test_path - 缺少必填字段。"""
+        workspace_id = create_test_workspace_fixture
+        
+        # Mock mcp_server 模块中的 workspace_manager
+        with patch('src.mcp_server.workspace_manager', workspace_manager):
+            result = await call_tool(
+                "submit_test_path",
+                {
+                    "workspace_id": workspace_id
+                    # 缺少 test_path
+                }
+            )
+        
+        assert len(result) == 1
+        data = json.loads(result[0].text)
+        assert data["success"] is False
+        assert "error" in data
