@@ -301,8 +301,8 @@
 
 #### 4.1 创建文件结构
 
-- [ ] 创建文件：`mcp-server/src/tools/test_path_question.py`
-- [ ] 导入必要的模块
+- [x] 创建文件：`mcp-server/src/tools/test_path_question.py` - ✅ 已创建
+- [x] 导入必要的模块 - ✅ 已导入（Path, Config, ValidationError, WorkspaceNotFoundError, logger, WorkspaceManager）
 
 #### 4.2 实现 ask_test_path 函数
 
