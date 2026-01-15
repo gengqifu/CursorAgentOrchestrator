@@ -343,11 +343,8 @@
 
 #### 5.1 集成测试
 
-- [ ] 运行所有第1周工具的集成测试：
-  ```bash
-  pytest mcp-server/tests/test_mcp_server.py -v -k "orchestrator_questions|prd_confirmation|trd_confirmation|test_path"
-  ```
-- [ ] 确保所有测试通过
+- [x] 运行所有第1周工具的集成测试 - ✅ 已运行（使用 pytest -k "orchestrator or prd_confirmation or trd_confirmation or test_path"）
+- [x] 确保所有测试通过 - ✅ 所有测试通过（6个测试全部通过）
 
 #### 5.2 端到端测试
 
