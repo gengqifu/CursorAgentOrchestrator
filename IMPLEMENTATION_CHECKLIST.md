@@ -348,11 +348,11 @@
 
 #### 5.2 端到端测试
 
-- [ ] 创建端到端测试场景：
-  - [ ] 询问4个问题 → 提交答案 → 创建工作区
-  - [ ] 生成 PRD → 确认 PRD → 继续
-  - [ ] 生成 PRD → 修改 PRD → 重新生成 → 确认
-- [ ] 运行端到端测试并确保通过
+- [x] 创建端到端测试场景 - ✅ 已创建（test_e2e_workflow.py）：
+  - [x] 询问4个问题 → 提交答案 → 创建工作区 - ✅ test_e2e_ask_questions_submit_answers_create_workspace
+  - [x] 生成 PRD → 确认 PRD → 继续 - ✅ test_e2e_generate_prd_confirm_prd_continue
+  - [x] 生成 PRD → 修改 PRD → 重新生成 → 确认 - ✅ test_e2e_generate_prd_modify_regenerate_confirm
+- [x] 运行端到端测试并确保通过 - ✅ 所有3个测试通过
 
 #### 5.3 文档更新
 
