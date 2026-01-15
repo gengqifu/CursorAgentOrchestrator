@@ -207,3 +207,5 @@ marimo/_lsp/
 __marimo__/
 .claude
 Agent Orchestrator - 智能开发流程编排.pdf
+.agent-orchestrator
+.agent-orchestrator/.workspace-index.json
