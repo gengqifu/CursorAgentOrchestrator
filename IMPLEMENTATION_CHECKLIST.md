@@ -254,9 +254,9 @@
 
 #### 3.2 实现函数
 
-- [ ] `check_trd_confirmation(workspace_id)` - 检查是否需要确认 TRD
-- [ ] `confirm_trd(workspace_id)` - 确认 TRD
-- [ ] `modify_trd(workspace_id)` - 标记需要修改 TRD
+- [x] `check_trd_confirmation(workspace_id)` - 检查是否需要确认 TRD - ✅ 已实现（检查 TRD 文件存在，返回确认请求和预览）
+- [x] `confirm_trd(workspace_id)` - 确认 TRD - ✅ 已实现（更新状态为 completed）
+- [x] `modify_trd(workspace_id)` - 标记需要修改 TRD - ✅ 已实现（更新状态为 needs_regeneration）
 
 #### 3.3 编写单元测试（TDD）
 
