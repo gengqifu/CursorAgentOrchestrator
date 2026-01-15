@@ -19,6 +19,7 @@
 │  ┌──────────────────┴─────────────────────────────────────┐  │
 │  │              MCP 工具层                                 │  │
 │  │  - 基础设施工具：工作区管理、任务管理                    │  │
+│  │  - 工作流编排工具：用户交互、确认循环                    │  │
 │  │  - SKILL 工具：8 个核心 SKILL 模块                      │  │
 │  └──────────────────┬─────────────────────────────────────┘  │
 │  ┌──────────────────┴─────────────────────────────────────┐  │
@@ -145,7 +146,8 @@
   "files": {
     "prd_path": ".agent-orchestrator/requirements/req-xxx/PRD.md",
     "trd_path": ".agent-orchestrator/requirements/req-xxx/TRD.md",
-    "tasks_json_path": ".agent-orchestrator/requirements/req-xxx/tasks.json"
+    "tasks_json_path": ".agent-orchestrator/requirements/req-xxx/tasks.json",
+    "test_path": "/path/to/project/tests/mock"
   }
 }
 ```
@@ -184,9 +186,10 @@ MCP Server (中央编排服务)
     ↓ 路由到对应工具
 MCP 工具层
     ├─ 基础设施工具 (create_workspace, get_workspace 等)
+    ├─ 工作流编排工具 (orchestrator_questions, prd_confirmation, trd_confirmation, test_path_question)
     └─ SKILL 工具 (generate_prd, generate_trd 等)
         ↓ 调用核心实现
-mcp-server/src/tools/*.py (8个子SKILL模块)
+mcp-server/src/tools/*.py (工作流编排工具 + 8个子SKILL模块)
     ↓ 使用 Manager
 WorkspaceManager / TaskManager
     ↓ 文件系统操作

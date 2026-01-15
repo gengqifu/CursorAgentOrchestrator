@@ -356,9 +356,9 @@
 
 #### 5.3 文档更新
 
-- [ ] 更新 `mcp-server/TOOLS.md`：添加4个新工具的说明
-- [ ] 更新 `README.md`：添加新工具的使用示例
-- [ ] 更新 `mcp-server/ARCHITECTURE.md`：更新架构图
+- [x] 更新 `mcp-server/TOOLS.md`：添加4个新工具的说明 - ✅ 已更新（添加了工作流编排工具部分）
+- [x] 更新 `README.md`：添加新工具的使用示例 - ✅ 已更新（添加了工作流编排工具使用示例和完整工作流程）
+- [x] 更新 `mcp-server/ARCHITECTURE.md`：更新架构图 - ✅ 已更新（更新了 MCP 工具层说明和工作区元数据格式）
 
 #### 5.4 代码审查
 

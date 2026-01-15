@@ -128,27 +128,74 @@ cd mcp-server
 
 ## 💡 使用示例
 
-### 在 Cursor 中创建工作区
+### 工作流编排工具
 
-在 Cursor 的命令面板中（`Cmd+Shift+P` / `Ctrl+Shift+P`），输入：
+#### 1. 询问4个问题并创建工作区
 
+```bash
+# 询问4个问题
+@agent-orchestrator ask_orchestrator_questions
+
+# 提交答案并创建工作区
+@agent-orchestrator submit_orchestrator_answers \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=https://example.com/requirement.md
 ```
-@agent-orchestrator create_workspace
+
+#### 2. PRD 确认循环
+
+```bash
+# 检查 PRD 确认
+@agent-orchestrator check_prd_confirmation workspace_id=req-xxx
+
+# 确认 PRD（继续下一步）
+@agent-orchestrator confirm_prd workspace_id=req-xxx
+
+# 修改 PRD（需要重新生成）
+@agent-orchestrator modify_prd workspace_id=req-xxx
 ```
 
-### 生成 PRD 文档
+#### 3. TRD 确认循环
+
+```bash
+# 检查 TRD 确认
+@agent-orchestrator check_trd_confirmation workspace_id=req-xxx
+
+# 确认 TRD（继续下一步）
+@agent-orchestrator confirm_trd workspace_id=req-xxx
+
+# 修改 TRD（需要重新生成）
+@agent-orchestrator modify_trd workspace_id=req-xxx
+```
+
+#### 4. 测试路径询问
+
+```bash
+# 询问测试路径（获取默认路径建议）
+@agent-orchestrator ask_test_path workspace_id=req-xxx
+
+# 提交测试路径
+@agent-orchestrator submit_test_path \
+  workspace_id=req-xxx \
+  test_path=/path/to/project/tests/mock
+```
+
+### SKILL 工具
+
+#### 生成 PRD 文档
 
 ```
 @agent-orchestrator generate_prd workspace-001 https://example.com/requirement
 ```
 
-### 生成代码
+#### 生成代码
 
 ```
 @agent-orchestrator generate_code workspace-001 task-001
 ```
 
-### 审查代码
+#### 审查代码
 
 ```
 @agent-orchestrator review_code workspace-001 task-001
@@ -157,29 +204,47 @@ cd mcp-server
 ### 完整工作流程示例
 
 ```bash
-# 1. 创建工作区
-create_workspace(project_path="/path/to/project", requirement_name="用户认证功能")
+# 阶段1：用户交互
+# 1. 询问4个问题并创建工作区
+@agent-orchestrator ask_orchestrator_questions
+@agent-orchestrator submit_orchestrator_answers \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=https://example.com/req
 
 # 2. 生成 PRD
-generate_prd(workspace_id="workspace-001", requirement_url="https://example.com/req")
+@agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
 
-# 3. 生成 TRD
-generate_trd(workspace_id="workspace-001", prd_path="PRD.md")
+# 3. PRD 确认循环
+@agent-orchestrator check_prd_confirmation workspace_id=req-xxx
+@agent-orchestrator confirm_prd workspace_id=req-xxx  # 或 modify_prd 然后重新生成
 
-# 4. 分解任务
-decompose_tasks(workspace_id="workspace-001", trd_path="TRD.md")
+# 4. 生成 TRD
+@agent-orchestrator generate_trd workspace_id=req-xxx
 
-# 5. 生成代码
-generate_code(workspace_id="workspace-001", task_id="task-001")
+# 5. TRD 确认循环
+@agent-orchestrator check_trd_confirmation workspace_id=req-xxx
+@agent-orchestrator confirm_trd workspace_id=req-xxx  # 或 modify_trd 然后重新生成
 
-# 6. 审查代码
-review_code(workspace_id="workspace-001", task_id="task-001")
+# 6. 分解任务
+@agent-orchestrator decompose_tasks workspace_id=req-xxx
 
-# 7. 生成测试
-generate_tests(workspace_id="workspace-001", test_output_dir="tests/")
+# 7. 询问测试路径
+@agent-orchestrator ask_test_path workspace_id=req-xxx
+@agent-orchestrator submit_test_path workspace_id=req-xxx test_path=/path/to/tests/mock
 
-# 8. 分析覆盖率
-analyze_coverage(workspace_id="workspace-001", project_path="/path/to/project")
+# 阶段2：任务执行（待实现）
+# 8. 生成代码
+@agent-orchestrator generate_code workspace_id=req-xxx task_id=task-001
+
+# 9. 审查代码
+@agent-orchestrator review_code workspace_id=req-xxx task_id=task-001
+
+# 10. 生成测试
+@agent-orchestrator generate_tests workspace_id=req-xxx test_output_dir=/path/to/tests/mock
+
+# 11. 分析覆盖率
+@agent-orchestrator analyze_coverage workspace_id=req-xxx project_path=/path/to/project
 ```
 
 ## 📁 项目结构
@@ -241,7 +306,29 @@ CursorAgentOrchestrator/
 - **8个子SKILL模块** (`mcp-server/src/tools/`)：核心业务逻辑，通过 MCP Server 调用
 - **调用流程**：Cursor CLI → MCP Server → 8个子SKILL模块 → 项目代码仓库
 
-## 🛠️ 8 个核心 SKILL 工具
+## 🛠️ 工具列表
+
+### 工作流编排工具（阶段1）
+
+1. **总编排器询问工具** (`orchestrator_questions`)
+   - `ask_orchestrator_questions` - 询问4个问题（项目路径、需求名称、需求URL、工作区路径）
+   - `submit_orchestrator_answers` - 提交答案并创建工作区
+
+2. **PRD 确认工具** (`prd_confirmation`)
+   - `check_prd_confirmation` - 检查 PRD 文件并返回确认请求
+   - `confirm_prd` - 确认 PRD（继续下一步）
+   - `modify_prd` - 标记需要修改 PRD（重新生成）
+
+3. **TRD 确认工具** (`trd_confirmation`)
+   - `check_trd_confirmation` - 检查 TRD 文件并返回确认请求
+   - `confirm_trd` - 确认 TRD（继续下一步）
+   - `modify_trd` - 标记需要修改 TRD（重新生成）
+
+4. **测试路径询问工具** (`test_path_question`)
+   - `ask_test_path` - 询问测试路径（生成默认路径建议）
+   - `submit_test_path` - 提交测试路径并保存到工作区元数据
+
+### 8 个核心 SKILL 工具
 
 1. **PRD Generator** - 产品需求文档生成
    - 从需求 URL 或文件生成标准化的 PRD 文档
