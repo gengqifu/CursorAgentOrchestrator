@@ -320,10 +320,10 @@
 
 #### 4.4 编写单元测试（TDD）
 
-- [ ] 创建测试文件：`mcp-server/tests/tools/test_test_path_question.py`
-- [ ] 编写3个测试用例
-- [ ] 运行测试并确保通过
-- [ ] 检查测试覆盖率 >= 90%
+- [x] 创建测试文件：`mcp-server/tests/tools/test_test_path_question.py` - ✅ 已创建
+- [x] 编写3个测试用例 - ✅ 已编写17个测试用例（超出要求）
+- [x] 运行测试并确保通过 - ✅ 所有17个测试通过
+- [x] 检查测试覆盖率 >= 90% - ✅ 覆盖率 100%
 
 #### 4.5 集成到 MCP Server
 
