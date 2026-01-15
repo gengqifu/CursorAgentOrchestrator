@@ -248,9 +248,9 @@
 
 #### 3.1 创建文件结构
 
-- [ ] 创建文件：`mcp-server/src/tools/trd_confirmation.py`
-- [ ] 参考 `prd_confirmation.py` 的实现模式
-- [ ] 实现针对 TRD 的确认和修改功能
+- [x] 创建文件：`mcp-server/src/tools/trd_confirmation.py` - ✅ 已创建
+- [x] 参考 `prd_confirmation.py` 的实现模式 - ✅ 已参考（相同的结构和导入）
+- [x] 实现针对 TRD 的确认和修改功能 - ✅ 文件结构已创建，功能将在后续步骤实现
 
 #### 3.2 实现函数
 
