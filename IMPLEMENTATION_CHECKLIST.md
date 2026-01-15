@@ -306,10 +306,10 @@
 
 #### 4.2 实现 ask_test_path 函数
 
-- [ ] 获取工作区信息
-- [ ] 生成默认路径建议（`{project_path}/tests/mock`）
-- [ ] 返回交互请求
-- [ ] 添加错误处理和日志记录
+- [x] 获取工作区信息 - ✅ 已实现（使用 WorkspaceManager.get_workspace）
+- [x] 生成默认路径建议（`{project_path}/tests/mock`） - ✅ 已实现
+- [x] 返回交互请求 - ✅ 已实现（返回 interaction_required=True 的字典）
+- [x] 添加错误处理和日志记录 - ✅ 已实现（处理 WorkspaceNotFoundError, ValidationError, Exception）
 
 #### 4.3 实现 submit_test_path 函数
 
