@@ -260,10 +260,19 @@
 
 #### 3.3 编写单元测试（TDD）
 
-- [ ] 创建测试文件：`mcp-server/tests/tools/test_trd_confirmation.py`
-- [ ] 编写5个测试用例（参考 prd_confirmation）
-- [ ] 运行测试并确保通过
-- [ ] 检查测试覆盖率 >= 90%
+- [x] 创建测试文件：`mcp-server/tests/tools/test_trd_confirmation.py` - ✅ 已创建
+- [x] 编写5个测试用例（参考 prd_confirmation） - ✅ 已编写9个测试用例（比 prd_confirmation 多4个，包括读取错误测试和修改循环测试）
+  - [x] `test_check_trd_confirmation_trd_exists` - TRD 存在时的确认请求
+  - [x] `test_check_trd_confirmation_trd_not_exists` - TRD 不存在时的错误
+  - [x] `test_check_trd_confirmation_workspace_not_found` - 工作区不存在时的错误
+  - [x] `test_check_trd_confirmation_read_error` - 读取 TRD 文件失败时的处理
+  - [x] `test_confirm_trd_success` - 确认 TRD 成功
+  - [x] `test_confirm_trd_workspace_not_found` - 确认 TRD 时工作区不存在
+  - [x] `test_modify_trd_success` - 修改 TRD 成功
+  - [x] `test_modify_trd_workspace_not_found` - 修改 TRD 时工作区不存在
+  - [x] `test_trd_modify_loop` - TRD 修改循环
+- [x] 运行测试并确保通过 - ✅ 所有9个测试通过
+- [x] 检查测试覆盖率 >= 90% - ✅ 覆盖率 100%（40/40 行）
 
 #### 3.4 集成到 MCP Server
 
