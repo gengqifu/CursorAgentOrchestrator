@@ -95,7 +95,26 @@
 更新工作区状态
 ```
 
-### 3. 代码生成流程
+### 3. 任务执行流程
+
+```
+用户请求 → TaskExecutor.execute_task()
+    ↓
+获取任务信息 (TaskManager)
+    ↓
+Review 循环开始
+    ├─ 生成代码 (CodeGenerator.generate_code())
+    ├─ Review 代码 (CodeReviewer.review_code())
+    ├─ 判断是否通过
+    ├─ 如果未通过，重试（最多 max_review_retries 次）
+    └─ 如果通过，返回成功
+    ↓
+更新任务状态
+    ↓
+返回执行结果
+```
+
+### 4. 代码生成流程
 
 ```
 用户请求 → CodeGenerator.generate_code()
@@ -186,7 +205,7 @@ MCP Server (中央编排服务)
     ↓ 路由到对应工具
 MCP 工具层
     ├─ 基础设施工具 (create_workspace, get_workspace 等)
-    ├─ 工作流编排工具 (orchestrator_questions, prd_confirmation, trd_confirmation, test_path_question)
+    ├─ 工作流编排工具 (orchestrator_questions, prd_confirmation, trd_confirmation, test_path_question, task_executor)
     └─ SKILL 工具 (generate_prd, generate_trd 等)
         ↓ 调用核心实现
 mcp-server/src/tools/*.py (工作流编排工具 + 8个子SKILL模块)
@@ -213,6 +232,31 @@ src.tools.prd_generator.generate_prd(...)
 WorkspaceManager.get_workspace(...)
     ↓ 文件系统操作
 保存 PRD.md 到工作区目录
+```
+
+### 示例：执行任务
+
+```
+用户: "为工作区 req-001 执行任务 task-001"
+    ↓
+Cursor IDE / MCP Client
+    ↓ 调用 MCP 工具
+MCP Server.call_tool("execute_task", {
+    "workspace_id": "req-001",
+    "task_id": "task-001",
+    "max_review_retries": 3
+})
+    ↓ 调用核心实现
+src.tools.task_executor.execute_task(...)
+    ↓ Review 循环
+    ├─ CodeGenerator.generate_code(...)
+    ├─ CodeReviewer.review_code(...)
+    ├─ 如果未通过，重试（最多 max_review_retries 次）
+    └─ 如果通过，返回成功
+    ↓ 使用 Manager
+TaskManager.update_task_status(...)
+    ↓ 文件系统操作
+更新任务状态到 tasks.json
 ```
 
 ## 错误处理

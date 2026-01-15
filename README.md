@@ -233,17 +233,16 @@ cd mcp-server
 @agent-orchestrator ask_test_path workspace_id=req-xxx
 @agent-orchestrator submit_test_path workspace_id=req-xxx test_path=/path/to/tests/mock
 
-# 阶段2：任务执行（待实现）
-# 8. 生成代码
-@agent-orchestrator generate_code workspace_id=req-xxx task_id=task-001
+# 阶段2：任务执行
+# 8. 执行任务（自动生成代码 → Review → 重试循环）
+@agent-orchestrator execute_task workspace_id=req-xxx task_id=task-001
+# 或执行所有待处理任务
+@agent-orchestrator execute_all_tasks workspace_id=req-xxx
 
-# 9. 审查代码
-@agent-orchestrator review_code workspace_id=req-xxx task_id=task-001
-
-# 10. 生成测试
+# 9. 生成测试
 @agent-orchestrator generate_tests workspace_id=req-xxx test_output_dir=/path/to/tests/mock
 
-# 11. 分析覆盖率
+# 10. 分析覆盖率
 @agent-orchestrator analyze_coverage workspace_id=req-xxx project_path=/path/to/project
 ```
 
@@ -327,6 +326,10 @@ CursorAgentOrchestrator/
 4. **测试路径询问工具** (`test_path_question`)
    - `ask_test_path` - 询问测试路径（生成默认路径建议）
    - `submit_test_path` - 提交测试路径并保存到工作区元数据
+
+5. **任务执行工具** (`task_executor`)
+   - `execute_task` - 执行单个任务（生成代码 → Review → 重试循环）
+   - `execute_all_tasks` - 执行所有待处理任务
 
 ### 8 个核心 SKILL 工具
 

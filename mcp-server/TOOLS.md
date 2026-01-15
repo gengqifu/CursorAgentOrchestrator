@@ -28,6 +28,10 @@
 @agent-orchestrator ask_test_path workspace_id=req-xxx
 @agent-orchestrator submit_test_path workspace_id=req-xxx test_path=/path/to/tests/mock
 
+# 任务执行工具
+@agent-orchestrator execute_task workspace_id=req-xxx task_id=task-001
+@agent-orchestrator execute_all_tasks workspace_id=req-xxx
+
 # SKILL 工具
 @agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
 @agent-orchestrator generate_trd workspace_id=req-xxx
@@ -49,6 +53,8 @@
 - `modify_trd` - 修改 TRD
 - `ask_test_path` - 询问测试路径
 - `submit_test_path` - 提交测试路径
+- `execute_task` - 执行单个任务（生成代码 → Review → 重试循环）
+- `execute_all_tasks` - 执行所有待处理任务
 
 **8 个核心 SKILL 工具**：
 - `generate_prd` - PRD 生成
@@ -160,6 +166,50 @@
 - `test_path`: 保存的测试路径
 
 **测试文件**: `tests/tools/test_test_path_question.py`
+
+### 5. 任务执行工具 (`task_executor`)
+
+**功能**: 执行任务（生成代码 → Review → 重试循环）
+
+**工具**:
+- `execute_task` - 执行单个任务（生成代码 → Review → 重试循环）
+- `execute_all_tasks` - 执行所有待处理任务
+
+**输入** (`execute_task`):
+- `workspace_id`: 工作区ID
+- `task_id`: 任务ID
+- `max_review_retries`: 最大 Review 重试次数（可选，默认为 3）
+
+**输入** (`execute_all_tasks`):
+- `workspace_id`: 工作区ID
+- `max_review_retries`: 每个任务的最大 Review 重试次数（可选，默认为 3）
+
+**输出** (`execute_task`):
+- `success`: 是否成功
+- `task_id`: 任务ID
+- `workspace_id`: 工作区ID
+- `passed`: Review 是否通过
+- `retry_count`: 重试次数
+- `review_report`: 最后一次 Review 报告
+- `code_files`: 生成的代码文件列表
+- `error`: 如果失败，包含错误信息
+
+**输出** (`execute_all_tasks`):
+- `success`: 是否成功
+- `workspace_id`: 工作区ID
+- `total_tasks`: 总任务数
+- `completed_tasks`: 完成的任务数
+- `failed_tasks`: 失败的任务数
+- `task_results`: 任务执行结果列表
+
+**执行流程**:
+1. 生成代码（调用 `generate_code`）
+2. Review 代码（调用 `review_code`）
+3. 如果 Review 通过，返回成功
+4. 如果 Review 未通过，重试（最多 `max_review_retries` 次）
+5. 达到最大重试次数时返回失败
+
+**测试文件**: `tests/tools/test_task_executor.py`
 
 ## 8 个核心 SKILL 工具
 
@@ -347,6 +397,17 @@ print(trd_result["trd_path"])
 # 分解任务
 tasks_result = decompose_tasks("workspace-001", trd_result["trd_path"])
 print(f"生成了 {tasks_result['task_count']} 个任务")
+
+# 执行任务
+from src.tools.task_executor import execute_task, execute_all_tasks
+
+# 执行单个任务
+task_result = execute_task("workspace-001", "task-001", max_review_retries=3)
+print(f"任务执行结果: {task_result['passed']}, 重试次数: {task_result['retry_count']}")
+
+# 执行所有待处理任务
+all_tasks_result = execute_all_tasks("workspace-001", max_review_retries=3)
+print(f"完成 {all_tasks_result['completed_tasks']}/{all_tasks_result['total_tasks']} 个任务")
 ```
 
 > **注意**：直接调用 Python 函数主要用于开发和测试。生产环境应通过 MCP Server 调用。
