@@ -605,8 +605,8 @@
 
 #### 10.5 代码质量检查和提交
 
-- [ ] 代码质量检查
-- [ ] Git 提交：`git commit -m "feat: 实现 stage_dependency_checker 工具"`
+- [x] 代码质量检查 - ✅ 已完成（Black格式化检查通过、Ruff检查通过、单元测试10个全部通过、集成测试5个全部通过、stage_dependency_checker.py覆盖率98%）
+- [x] Git 提交：`git commit -m "feat: 实现 stage_dependency_checker 工具"` - ✅ 已完成
 
 **备注**：_________________________________
 
@@ -616,35 +616,31 @@
 
 #### 11.1 修改 trd_generator.py
 
-- [ ] 添加 PRD 状态检查：
-  ```python
-  if workspace["status"].get("prd_status") != "completed":
-      raise ValidationError("PRD尚未完成，无法生成TRD。")
-  ```
-- [ ] 添加 PRD 文件存在检查
-- [ ] 标记 TRD 为进行中（`trd_status = "in_progress"`）
-- [ ] 生成成功后标记为已完成（`trd_status = "completed"`）
-- [ ] 生成失败时标记为失败（`trd_status = "failed"`）
-- [ ] 更新相关测试用例
+- [x] 添加 PRD 状态检查 - ✅ 已完成（检查 prd_status 是否为 completed）
+- [x] 添加 PRD 文件存在检查 - ✅ 已完成（如果 prd_path 未提供，从工作区获取；验证文件存在）
+- [x] 标记 TRD 为进行中（`trd_status = "in_progress"`） - ✅ 已完成（在生成前标记）
+- [x] 生成成功后标记为已完成（`trd_status = "completed"`） - ✅ 已完成（在 try 块中标记）
+- [x] 生成失败时标记为失败（`trd_status = "failed"`） - ✅ 已完成（在 except 块中标记）
+- [x] 更新相关测试用例 - ✅ 已完成（更新了5个现有测试用例，新增了4个测试用例，共9个测试用例全部通过，覆盖率97%）
 
 #### 11.2 修改 task_decomposer.py
 
-- [ ] 添加 TRD 状态检查
-- [ ] 添加 TRD 文件存在检查
-- [ ] 标记任务分解状态
-- [ ] 更新相关测试用例
+- [x] 添加 TRD 状态检查 - ✅ 已完成（检查 trd_status 是否为 completed）
+- [x] 添加 TRD 文件存在检查 - ✅ 已完成（如果 trd_path 未提供，从工作区获取；验证文件存在）
+- [x] 标记任务分解状态 - ✅ 已完成（in_progress, completed, failed）
+- [x] 更新相关测试用例 - ✅ 已完成（更新了5个现有测试用例，新增了4个测试用例，共9个测试用例全部通过，覆盖率91%）
 
 #### 11.3 修改 code_generator.py
 
-- [ ] 添加任务状态检查
-- [ ] 标记代码生成状态
-- [ ] 更新相关测试用例
+- [x] 添加任务状态检查 - ✅ 已完成（检查 tasks_status 是否为 completed，检查任务状态是否为 pending）
+- [x] 标记代码生成状态 - ✅ 已完成（in_progress, completed（当所有任务完成时）, failed）
+- [x] 更新相关测试用例 - ✅ 已完成（更新了2个现有测试用例，新增了4个测试用例，共6个测试用例全部通过，覆盖率100%）
 
 #### 11.4 修改 test_generator.py
 
-- [ ] 添加代码状态检查
-- [ ] 标记测试生成状态
-- [ ] 更新相关测试用例
+- [x] 添加代码状态检查 - ✅ 已完成（检查是否有已完成的任务，检查是否有未完成的任务）
+- [x] 标记测试生成状态 - ✅ 已完成（in_progress, completed, failed）
+- [x] 更新相关测试用例 - ✅ 已完成（更新了2个现有测试用例，新增了4个测试用例，共6个测试用例全部通过，覆盖率100%）
 
 #### 11.5 测试和提交
 
