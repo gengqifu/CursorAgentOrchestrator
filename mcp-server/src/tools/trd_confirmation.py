@@ -11,7 +11,6 @@ Python 3.9+ 兼容：使用内置类型 dict 而非 typing.Dict
 from pathlib import Path
 
 from src.core.config import Config
-from src.core.exceptions import WorkspaceNotFoundError
 from src.core.logger import setup_logger
 from src.managers.workspace_manager import WorkspaceManager
 
