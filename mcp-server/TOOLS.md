@@ -32,6 +32,10 @@
 @agent-orchestrator execute_task workspace_id=req-xxx task_id=task-001
 @agent-orchestrator execute_all_tasks workspace_id=req-xxx
 
+# 多Agent支持工具
+@agent-orchestrator get_workflow_status workspace_id=req-xxx
+@agent-orchestrator check_stage_ready workspace_id=req-xxx stage=trd
+
 # SKILL 工具
 @agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
 @agent-orchestrator generate_trd workspace_id=req-xxx
@@ -55,6 +59,10 @@
 - `submit_test_path` - 提交测试路径
 - `execute_task` - 执行单个任务（生成代码 → Review → 重试循环）
 - `execute_all_tasks` - 执行所有待处理任务
+
+**多Agent支持工具**：
+- `get_workflow_status` - 获取工作流状态（各阶段状态、进度、可开始的阶段、被阻塞的阶段）
+- `check_stage_ready` - 检查阶段是否可以开始（验证前置阶段依赖和文件依赖）
 
 **8 个核心 SKILL 工具**：
 - `generate_prd` - PRD 生成
@@ -210,6 +218,77 @@
 5. 达到最大重试次数时返回失败
 
 **测试文件**: `tests/tools/test_task_executor.py`
+
+### 6. 多Agent支持工具
+
+#### 6.1 工作流状态查询工具 (`workflow_status`)
+
+**功能**: 获取工作流状态，包括各阶段的状态、进度、可开始的阶段和被阻塞的阶段
+
+**工具**:
+- `get_workflow_status` - 获取工作流状态
+
+**输入**:
+- `workspace_id`: 工作区ID
+
+**输出**:
+- `success`: 是否成功
+- `workspace_id`: 工作区ID
+- `stages`: 各阶段状态字典
+  - `prd`: PRD阶段状态（status, file, ready）
+  - `trd`: TRD阶段状态（status, file, ready）
+  - `tasks`: 任务分解阶段状态（status, file, task_count, ready）
+  - `code`: 代码生成阶段状态（status, completed_tasks, pending_tasks, total_tasks, ready）
+  - `test`: 测试生成阶段状态（status, ready）
+  - `coverage`: 覆盖率分析阶段状态（status, ready）
+- `next_available_stages`: 可以开始的阶段列表
+- `blocked_stages`: 被阻塞的阶段列表
+- `workflow_progress`: 工作流进度
+  - `completed_stages`: 已完成的阶段数
+  - `total_stages`: 总阶段数
+  - `progress_percentage`: 进度百分比
+
+**使用场景**:
+- 多Agent协作时，Agent可以查询当前工作流状态，了解哪些阶段已完成、哪些可以开始
+- 用于工作流编排和决策
+
+**测试文件**: `tests/tools/test_workflow_status.py`
+
+#### 6.2 阶段依赖检查工具 (`stage_dependency_checker`)
+
+**功能**: 检查指定阶段是否可以开始，验证前置阶段依赖和文件依赖
+
+**工具**:
+- `check_stage_ready` - 检查阶段是否可以开始
+
+**输入**:
+- `workspace_id`: 工作区ID
+- `stage`: 阶段名称（"prd", "trd", "tasks", "code", "test", "coverage"）
+
+**输出**:
+- `success`: 是否成功
+- `stage`: 阶段名称
+- `ready`: 是否可以开始
+- `reason`: 原因说明
+- `required_stages`: 前置阶段列表
+- `completed_stages`: 已完成的前置阶段列表
+- `pending_stages`: 待完成的前置阶段列表
+- `in_progress_stages`: 进行中的前置阶段列表
+- `file_ready`: 依赖文件是否存在
+
+**阶段依赖关系**:
+- `prd`: 无前置依赖
+- `trd`: 依赖 `prd` 完成
+- `tasks`: 依赖 `trd` 完成
+- `code`: 依赖 `tasks` 完成
+- `test`: 依赖 `code` 完成（所有任务完成）
+- `coverage`: 依赖 `test` 完成
+
+**使用场景**:
+- 多Agent协作时，Agent在执行某个阶段前，先检查该阶段是否可以开始
+- 防止前置阶段未完成时错误执行下一阶段
+
+**测试文件**: `tests/tools/test_stage_dependency_checker.py`
 
 ## 8 个核心 SKILL 工具
 

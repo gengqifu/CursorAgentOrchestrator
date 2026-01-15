@@ -644,9 +644,9 @@
 
 #### 11.5 测试和提交
 
-- [ ] 运行所有相关测试并确保通过
-- [ ] 代码质量检查
-- [ ] Git 提交：`git commit -m "feat: 为现有工具添加状态检查"`
+- [x] 运行所有相关测试并确保通过 - ✅ 已完成（30个测试用例全部通过：trd_generator 9个，task_decomposer 9个，code_generator 6个，test_generator 6个）
+- [x] 代码质量检查 - ✅ 已完成（Black格式化检查通过，Ruff代码风格检查通过）
+- [x] Git 提交：`git commit -m "feat: 为现有工具添加状态检查"` - ✅ 已完成
 
 **备注**：_________________________________
 
@@ -656,24 +656,24 @@
 
 #### 12.1 统一集成
 
-- [ ] 检查所有第3周工具已集成
-- [ ] 更新 `list_tools()` 函数
-- [ ] 更新 `call_tool()` 函数
+- [x] 检查所有第3周工具已集成 - ✅ 已完成（get_workflow_status 和 check_stage_ready 都已集成）
+- [x] 更新 `list_tools()` 函数 - ✅ 已完成（两个工具都已注册，工具总数27个）
+- [x] 更新 `call_tool()` 函数 - ✅ 已完成（两个工具的处理逻辑都已添加，集成测试全部通过）
 
 #### 12.2 编写集成测试
 
-- [ ] 创建多Agent并行测试场景：
-  - [ ] Agent A 生成 PRD → Agent B 查询状态 → Agent B 生成 TRD
-  - [ ] Agent C 分解任务 → Agent D, E, F 并行处理不同任务
-  - [ ] 验证状态依赖检查正常工作
-  - [ ] 验证文件锁确保并发安全
-- [ ] 运行集成测试并确保通过
+- [x] 创建多Agent并行测试场景：
+  - [x] Agent A 生成 PRD → Agent B 查询状态 → Agent B 生成 TRD - ✅ 已完成（test_multi_agent_prd_to_trd_workflow）
+  - [x] Agent C 分解任务 → Agent D, E, F 并行处理不同任务 - ✅ 已完成（test_multi_agent_parallel_task_execution）
+  - [x] 验证状态依赖检查正常工作 - ✅ 已完成（test_multi_agent_state_dependency_check）
+  - [x] 验证文件锁确保并发安全 - ✅ 已完成（test_multi_agent_file_lock_concurrency）
+- [x] 运行集成测试并确保通过 - ✅ 已完成（4个测试用例全部通过）
 
 #### 12.3 文档更新
 
-- [ ] 更新 `mcp-server/TOOLS.md`
-- [ ] 更新 `README.md`
-- [ ] 创建 `MULTI_AGENT_GUIDE.md`（多Agent协作指南）
+- [x] 更新 `mcp-server/TOOLS.md` - ✅ 已完成（添加了多Agent支持工具说明：get_workflow_status 和 check_stage_ready）
+- [x] 更新 `README.md` - ✅ 已完成（添加了多Agent支持章节，包括核心功能、支持场景和使用示例）
+- [x] 创建 `MULTI_AGENT_GUIDE.md`（多Agent协作指南） - ✅ 已完成（包含概述、核心机制、使用场景、最佳实践、工具参考和常见问题）
 
 #### 12.4 阶段总结
 

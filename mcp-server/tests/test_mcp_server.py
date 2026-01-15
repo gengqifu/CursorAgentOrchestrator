@@ -3,6 +3,7 @@
 Python 3.9+ 兼容
 """
 
+import asyncio
 import json
 from pathlib import Path
 from unittest.mock import patch
@@ -60,6 +61,9 @@ class TestMCPServer:
 
         # 检查工作流状态查询工具
         assert "get_workflow_status" in tool_names
+
+        # 检查阶段依赖检查工具
+        assert "check_stage_ready" in tool_names
 
         # 检查 SKILL 工具
         assert "generate_prd" in tool_names
@@ -1608,3 +1612,356 @@ class TestMCPServer:
         data = json.loads(result[0].text)
         assert data["success"] is False
         assert "error" in data
+
+    @pytest.mark.asyncio
+    async def test_multi_agent_prd_to_trd_workflow(
+        self, temp_dir, monkeypatch, workspace_manager, sample_project_dir
+    ):
+        """多Agent测试：Agent A 生成 PRD → Agent B 查询状态 → Agent B 生成 TRD。
+
+        测试场景：
+        1. Agent A: 生成 PRD
+        2. Agent B: 查询工作流状态，发现 PRD 已完成
+        3. Agent B: 检查 TRD 是否可以开始
+        4. Agent B: 生成 TRD
+        5. 验证状态依赖检查正常工作
+        """
+        from src.managers.task_manager import TaskManager
+        from tests.conftest import create_test_workspace
+
+        # Mock mcp_server 模块中的 workspace_manager 和 task_manager
+        task_manager = TaskManager(config=workspace_manager.config)
+        with (
+            patch("src.mcp_server.workspace_manager", workspace_manager),
+            patch("src.mcp_server.task_manager", task_manager),
+        ):
+                # Agent A: 生成 PRD
+                workspace_id = create_test_workspace(
+                    workspace_manager=workspace_manager,
+                    project_dir=sample_project_dir,
+                    requirement_name="测试需求",
+                )
+
+                # Agent A: 生成 PRD
+                prd_result = await call_tool(
+                    "generate_prd",
+                    {
+                        "workspace_id": workspace_id,
+                        "requirement_url": "https://example.com/test",
+                    },
+                )
+                prd_data = json.loads(prd_result[0].text)
+                assert prd_data["success"] is True
+
+                # Agent A: 确认 PRD
+                confirm_result = await call_tool(
+                    "confirm_prd",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                confirm_data = json.loads(confirm_result[0].text)
+                assert confirm_data["success"] is True
+
+                # Agent B: 查询工作流状态
+                status_result = await call_tool(
+                    "get_workflow_status",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                status_data = json.loads(status_result[0].text)
+                assert status_data["success"] is True
+                assert status_data["stages"]["prd"]["status"] == "completed"
+                assert "prd" not in status_data["next_available_stages"]
+                assert "trd" in status_data["next_available_stages"]
+
+                # Agent B: 检查 TRD 是否可以开始
+                check_result = await call_tool(
+                    "check_stage_ready",
+                    {
+                        "workspace_id": workspace_id,
+                        "stage": "trd",
+                    },
+                )
+                check_data = json.loads(check_result[0].text)
+                assert check_data["success"] is True
+                assert check_data["ready"] is True
+                assert check_data["reason"] == "前置阶段已完成，可以开始"
+
+                # Agent B: 生成 TRD
+                trd_result = await call_tool(
+                    "generate_trd",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                trd_data = json.loads(trd_result[0].text)
+                assert trd_data["success"] is True
+
+                # 验证最终状态
+                final_status_result = await call_tool(
+                    "get_workflow_status",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                final_status_data = json.loads(final_status_result[0].text)
+                assert final_status_data["stages"]["trd"]["status"] == "completed"
+
+    @pytest.mark.asyncio
+    async def test_multi_agent_parallel_task_execution(
+        self, temp_dir, monkeypatch, workspace_manager, sample_project_dir
+    ):
+        """多Agent测试：Agent C 分解任务 → Agent D, E, F 并行处理不同任务。
+
+        测试场景：
+        1. Agent C: 分解任务（创建3个任务）
+        2. Agent D, E, F: 并行处理不同任务（代码生成）
+        3. 验证文件锁确保并发安全
+        4. 验证所有任务都正确完成
+        """
+        from src.core.config import Config
+        from src.managers.task_manager import TaskManager
+        from src.utils.file_lock import file_lock
+        from tests.conftest import create_test_workspace
+
+        # Mock mcp_server 模块中的 workspace_manager 和 task_manager
+        task_manager = TaskManager(config=workspace_manager.config)
+        with (
+            patch("src.mcp_server.workspace_manager", workspace_manager),
+            patch("src.mcp_server.task_manager", task_manager),
+        ):
+                # 准备工作区：PRD 和 TRD 已完成
+                workspace_id = create_test_workspace(
+                    workspace_manager=workspace_manager,
+                    project_dir=sample_project_dir,
+                    requirement_name="测试需求",
+                )
+
+                config = Config()
+                workspace_dir = config.get_workspace_path(workspace_id)
+
+                # 创建 PRD 文件并标记为已完成
+                prd_file = workspace_dir / "PRD.md"
+                prd_file.write_text("# PRD: 测试需求\n\n这是测试PRD内容")
+                workspace_manager.update_workspace_status(
+                    workspace_id, {"prd_status": "completed"}
+                )
+                meta_file = workspace_dir / "workspace.json"
+                with file_lock(meta_file):
+                    with open(meta_file, encoding="utf-8") as f:
+                        workspace = json.load(f)
+                    workspace["files"]["prd_path"] = str(prd_file)
+                    with open(meta_file, "w", encoding="utf-8") as f:
+                        json.dump(workspace, f, ensure_ascii=False, indent=2)
+
+                # 创建 TRD 文件并标记为已完成
+                trd_file = workspace_dir / "TRD.md"
+                trd_file.write_text("# TRD: 测试需求\n\n## 功能1\n## 功能2\n## 功能3")
+                workspace_manager.update_workspace_status(
+                    workspace_id, {"trd_status": "completed"}
+                )
+                with file_lock(meta_file):
+                    with open(meta_file, encoding="utf-8") as f:
+                        workspace = json.load(f)
+                    workspace["files"]["trd_path"] = str(trd_file)
+                    with open(meta_file, "w", encoding="utf-8") as f:
+                        json.dump(workspace, f, ensure_ascii=False, indent=2)
+
+                # Agent C: 分解任务
+                decompose_result = await call_tool(
+                    "decompose_tasks",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                decompose_data = json.loads(decompose_result[0].text)
+                assert decompose_data["success"] is True
+
+                # 获取任务列表
+                tasks_result = await call_tool(
+                    "get_tasks",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                tasks_data = json.loads(tasks_result[0].text)
+                assert tasks_data["success"] is True
+                tasks = tasks_data["tasks"]
+                assert len(tasks) >= 1  # 至少1个任务
+
+                # 选择所有任务用于并行处理（如果少于3个，则使用所有任务）
+                task_ids = [task["task_id"] for task in tasks[: min(3, len(tasks))]]
+
+                # Agent D, E, F: 并行处理不同任务
+                async def generate_code_for_task(task_id: str):
+                    """为单个任务生成代码。"""
+                    result = await call_tool(
+                        "generate_code",
+                        {
+                            "workspace_id": workspace_id,
+                            "task_id": task_id,
+                        },
+                    )
+                    data = json.loads(result[0].text)
+                    return data
+
+                # 并行执行3个任务
+                results = await asyncio.gather(
+                    *[generate_code_for_task(task_id) for task_id in task_ids]
+                )
+
+                # 验证所有任务都成功完成
+                for result in results:
+                    assert result["success"] is True
+                    assert "code_files" in result
+
+                # 验证所有任务状态都已更新为 completed
+                final_tasks_result = await call_tool(
+                    "get_tasks",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                final_tasks_data = json.loads(final_tasks_result[0].text)
+                completed_tasks = [
+                    t for t in final_tasks_data["tasks"] if t["task_id"] in task_ids
+                ]
+                assert len(completed_tasks) == len(task_ids)
+                for task in completed_tasks:
+                    assert task["status"] == "completed"
+                    assert "code_files" in task
+
+    @pytest.mark.asyncio
+    async def test_multi_agent_state_dependency_check(
+        self, temp_dir, monkeypatch, workspace_manager, sample_project_dir
+    ):
+        """多Agent测试：验证状态依赖检查正常工作。
+
+        测试场景：
+        1. Agent A: 生成 PRD（但未确认）
+        2. Agent B: 尝试生成 TRD（应该失败，因为 PRD 未完成）
+        3. Agent A: 确认 PRD
+        4. Agent B: 再次尝试生成 TRD（应该成功）
+        """
+        from src.managers.task_manager import TaskManager
+        from tests.conftest import create_test_workspace
+
+        # Mock mcp_server 模块中的 workspace_manager 和 task_manager
+        task_manager = TaskManager(config=workspace_manager.config)
+        with (
+            patch("src.mcp_server.workspace_manager", workspace_manager),
+            patch("src.mcp_server.task_manager", task_manager),
+        ):
+                workspace_id = create_test_workspace(
+                    workspace_manager=workspace_manager,
+                    project_dir=sample_project_dir,
+                    requirement_name="测试需求",
+                )
+
+                # Agent A: 生成 PRD（但未确认）
+                prd_result = await call_tool(
+                    "generate_prd",
+                    {
+                        "workspace_id": workspace_id,
+                        "requirement_url": "https://example.com/test",
+                    },
+                )
+                prd_data = json.loads(prd_result[0].text)
+                assert prd_data["success"] is True
+
+                # Agent B: 尝试生成 TRD（应该失败，因为 PRD 状态不是 completed）
+                trd_result = await call_tool(
+                    "generate_trd",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                trd_data = json.loads(trd_result[0].text)
+                assert trd_data["success"] is False
+                assert "PRD尚未完成" in trd_data["error"]
+
+                # Agent A: 确认 PRD
+                confirm_result = await call_tool(
+                    "confirm_prd",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                confirm_data = json.loads(confirm_result[0].text)
+                assert confirm_data["success"] is True
+
+                # Agent B: 再次尝试生成 TRD（应该成功）
+                trd_result2 = await call_tool(
+                    "generate_trd",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                trd_data2 = json.loads(trd_result2[0].text)
+                assert trd_data2["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_multi_agent_file_lock_concurrency(
+        self, temp_dir, monkeypatch, workspace_manager, sample_project_dir
+    ):
+        """多Agent测试：验证文件锁确保并发安全。
+
+        测试场景：
+        1. 多个 Agent 同时更新工作区状态
+        2. 验证文件锁确保数据一致性
+        3. 验证没有数据损坏或丢失
+        """
+        from src.managers.task_manager import TaskManager
+        from tests.conftest import create_test_workspace
+
+        # Mock mcp_server 模块中的 workspace_manager 和 task_manager
+        task_manager = TaskManager(config=workspace_manager.config)
+        with (
+            patch("src.mcp_server.workspace_manager", workspace_manager),
+            patch("src.mcp_server.task_manager", task_manager),
+        ):
+                workspace_id = create_test_workspace(
+                    workspace_manager=workspace_manager,
+                    project_dir=sample_project_dir,
+                    requirement_name="测试需求",
+                )
+
+                # 定义多个 Agent 同时更新状态的函数
+                async def update_status(agent_id: str, status_updates: dict):
+                    """更新工作区状态。"""
+                    result = await call_tool(
+                        "update_workspace_status",
+                        {
+                            "workspace_id": workspace_id,
+                            "status_updates": status_updates,
+                        },
+                    )
+                    data = json.loads(result[0].text)
+                    return agent_id, data
+
+                # 多个 Agent 同时更新不同的状态字段
+                results = await asyncio.gather(
+                    update_status("Agent-A", {"prd_status": "completed"}),
+                    update_status("Agent-B", {"trd_status": "in_progress"}),
+                    update_status("Agent-C", {"tasks_status": "pending"}),
+                )
+
+                # 验证所有更新都成功
+                for agent_id, data in results:
+                    assert data["success"] is True, f"{agent_id} 更新失败"
+
+                # 验证最终状态包含所有更新
+                workspace_result = await call_tool(
+                    "get_workspace",
+                    {
+                        "workspace_id": workspace_id,
+                    },
+                )
+                workspace_data = json.loads(workspace_result[0].text)
+                assert workspace_data["success"] is True
+                status = workspace_data["workspace"]["status"]
+                assert status["prd_status"] == "completed"
+                assert status["trd_status"] == "in_progress"
+                assert status["tasks_status"] == "pending"

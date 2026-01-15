@@ -181,3 +181,65 @@ python3 -m mypy src
 - ✅ 使用 Python 3.9+ 内置类型提示（`dict`, `list` 而非 `Dict`, `List`）
 - ✅ 使用 `from __future__ import annotations` 支持延迟求值（可选）
 - ✅ 所有代码在 Python 3.9+ 环境下测试通过
+
+## 多Agent支持
+
+本项目支持多个Agent协作完成开发流程，通过以下机制确保并发安全：
+
+### 核心功能
+
+1. **工作流状态查询** (`get_workflow_status`)
+   - 查询当前工作流各阶段状态
+   - 识别可以开始的阶段和被阻塞的阶段
+   - 计算工作流进度百分比
+
+2. **阶段依赖检查** (`check_stage_ready`)
+   - 检查指定阶段是否可以开始
+   - 验证前置阶段依赖和文件依赖
+   - 提供详细的依赖状态信息
+
+3. **文件锁机制** (`file_lock`)
+   - 确保并发访问工作区元数据的安全性
+   - 支持多Agent同时更新不同状态字段
+   - 防止数据损坏或丢失
+
+### 支持场景
+
+1. **不同阶段由不同Agent顺序完成**
+   - Agent A → PRD生成
+   - Agent B → TRD生成（查询状态后开始）
+   - Agent C → 任务分解
+   - Agent D, E, F → 并行处理不同任务
+
+2. **不同任务由不同Agent并行处理**
+   - 文件锁确保并发安全
+   - 状态查询确保协调
+   - 每个Agent更新自己的任务状态
+
+3. **状态依赖检查防止错误执行**
+   - 前置阶段未完成时，无法开始下一阶段
+   - 清晰的错误提示
+
+### 使用示例
+
+```bash
+# Agent A: 生成 PRD
+@agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
+@agent-orchestrator confirm_prd workspace_id=req-xxx
+
+# Agent B: 查询状态，发现 PRD 已完成
+@agent-orchestrator get_workflow_status workspace_id=req-xxx
+
+# Agent B: 检查 TRD 是否可以开始
+@agent-orchestrator check_stage_ready workspace_id=req-xxx stage=trd
+
+# Agent B: 生成 TRD
+@agent-orchestrator generate_trd workspace_id=req-xxx
+
+# Agent C, D, E: 并行处理不同任务
+@agent-orchestrator generate_code workspace_id=req-xxx task_id=task-001
+@agent-orchestrator generate_code workspace_id=req-xxx task_id=task-002
+@agent-orchestrator generate_code workspace_id=req-xxx task_id=task-003
+```
+
+详细使用指南请参考：[MULTI_AGENT_GUIDE.md](MULTI_AGENT_GUIDE.md)
