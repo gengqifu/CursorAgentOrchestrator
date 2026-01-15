@@ -554,8 +554,6 @@ class TestMCPServer:
         # Mock generate_prd 抛出一般异常
         from src.tools import prd_generator
 
-        original_generate_prd = prd_generator.generate_prd
-
         def mock_generate_prd(*args, **kwargs):
             raise RuntimeError("模拟运行时错误")
 
@@ -1051,3 +1049,244 @@ class TestMCPServer:
         assert data["success"] is True
         # 验证传递了 max_review_retries 参数
         assert mock_execute_all.call_args[1]["max_review_retries"] == 5
+
+    @pytest.mark.asyncio
+    async def test_integration_execute_task_review_passed(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """集成测试：单个任务执行（Review 通过）。
+
+        测试完整流程：
+        1. 创建任务
+        2. 调用 execute_task 通过 MCP
+        3. 验证 generate_code 被调用
+        4. 验证 review_code 被调用并返回 passed=True
+        5. 验证任务执行成功
+        """
+        workspace_id = create_test_workspace_fixture
+
+        from src.managers.task_manager import TaskManager
+
+        task_manager = TaskManager()
+        task_id = "task-integration-001"
+        task_manager.update_task_status(
+            workspace_id,
+            task_id,
+            "pending",
+            description="集成测试任务 - Review 通过",
+        )
+
+        # Mock generate_code 和 review_code，模拟 Review 通过的场景
+        with (
+            patch("src.tools.task_executor.generate_code") as mock_generate,
+            patch("src.tools.task_executor.review_code") as mock_review,
+        ):
+            # generate_code 返回成功
+            mock_generate.return_value = {
+                "success": True,
+                "task_id": task_id,
+                "workspace_id": workspace_id,
+                "code_files": ["/path/to/generated_file.py"],
+            }
+
+            # review_code 返回通过
+            mock_review.return_value = {
+                "success": True,
+                "task_id": task_id,
+                "workspace_id": workspace_id,
+                "passed": True,
+                "review_report": "代码审查通过，质量良好。",
+            }
+
+            # 调用 execute_task 通过 MCP
+            result = await call_tool(
+                "execute_task",
+                {
+                    "workspace_id": workspace_id,
+                    "task_id": task_id,
+                },
+            )
+
+        # 验证结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["task_id"] == task_id
+        assert data["workspace_id"] == workspace_id
+        assert data["passed"] is True
+        assert data["retry_count"] == 0
+
+        # 验证 generate_code 和 review_code 被调用
+        assert mock_generate.call_count == 1
+        assert mock_review.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_integration_execute_task_review_failed_retry(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """集成测试：单个任务执行（Review 失败重试）。
+
+        测试完整流程：
+        1. 创建任务
+        2. 调用 execute_task 通过 MCP
+        3. 验证 generate_code 被调用
+        4. 验证 review_code 第一次返回 passed=False
+        5. 验证 review_code 第二次返回 passed=True（重试成功）
+        6. 验证任务执行成功，retry_count=1
+        """
+        workspace_id = create_test_workspace_fixture
+
+        from src.managers.task_manager import TaskManager
+
+        task_manager = TaskManager()
+        task_id = "task-integration-002"
+        task_manager.update_task_status(
+            workspace_id,
+            task_id,
+            "pending",
+            description="集成测试任务 - Review 失败重试",
+        )
+
+        # Mock generate_code 和 review_code，模拟 Review 失败后重试成功的场景
+        with (
+            patch("src.tools.task_executor.generate_code") as mock_generate,
+            patch("src.tools.task_executor.review_code") as mock_review,
+        ):
+            # generate_code 返回成功
+            mock_generate.return_value = {
+                "success": True,
+                "task_id": task_id,
+                "workspace_id": workspace_id,
+                "code_files": ["/path/to/generated_file.py"],
+            }
+
+            # review_code 第一次返回失败，第二次返回通过
+            mock_review.side_effect = [
+                {
+                    "success": True,
+                    "task_id": task_id,
+                    "workspace_id": workspace_id,
+                    "passed": False,
+                    "review_report": "代码需要改进：缺少错误处理。",
+                },
+                {
+                    "success": True,
+                    "task_id": task_id,
+                    "workspace_id": workspace_id,
+                    "passed": True,
+                    "review_report": "代码审查通过，已添加错误处理。",
+                },
+            ]
+
+            # 调用 execute_task 通过 MCP
+            result = await call_tool(
+                "execute_task",
+                {
+                    "workspace_id": workspace_id,
+                    "task_id": task_id,
+                    "max_review_retries": 3,
+                },
+            )
+
+        # 验证结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["task_id"] == task_id
+        assert data["workspace_id"] == workspace_id
+        assert data["passed"] is True
+        assert data["retry_count"] == 1  # 重试了1次
+
+        # 验证 generate_code 被调用1次，review_code 被调用2次（1次失败 + 1次成功）
+        assert mock_generate.call_count == 2  # 第一次生成 + 重试时重新生成
+        assert mock_review.call_count == 2  # 第一次审查失败 + 第二次审查通过
+
+    @pytest.mark.asyncio
+    async def test_integration_execute_all_tasks_loop(
+        self, create_test_workspace_fixture, workspace_manager, sample_project_dir
+    ):
+        """集成测试：所有任务循环执行。
+
+        测试完整流程：
+        1. 创建多个 pending 任务
+        2. 调用 execute_all_tasks 通过 MCP
+        3. 验证每个任务都被执行
+        4. 验证所有任务执行成功
+        5. 验证统计信息正确
+        """
+        workspace_id = create_test_workspace_fixture
+
+        from src.managers.task_manager import TaskManager
+
+        task_manager = TaskManager()
+        # 创建3个 pending 任务
+        task_ids = []
+        for i in range(1, 4):
+            task_id = f"task-integration-all-{i:03d}"
+            task_ids.append(task_id)
+            task_manager.update_task_status(
+                workspace_id,
+                task_id,
+                "pending",
+                description=f"集成测试任务 {i}",
+            )
+
+        # Mock generate_code 和 review_code，模拟所有任务都成功
+        with (
+            patch("src.tools.task_executor.generate_code") as mock_generate,
+            patch("src.tools.task_executor.review_code") as mock_review,
+        ):
+            # generate_code 返回成功
+            def generate_side_effect(workspace_id: str, task_id: str):
+                return {
+                    "success": True,
+                    "task_id": task_id,
+                    "workspace_id": workspace_id,
+                    "code_files": [f"/path/to/generated_file_{task_id}.py"],
+                }
+
+            mock_generate.side_effect = generate_side_effect
+
+            # review_code 返回通过
+            def review_side_effect(workspace_id: str, task_id: str):
+                return {
+                    "success": True,
+                    "task_id": task_id,
+                    "workspace_id": workspace_id,
+                    "passed": True,
+                    "review_report": f"任务 {task_id} 审查通过。",
+                }
+
+            mock_review.side_effect = review_side_effect
+
+            # 调用 execute_all_tasks 通过 MCP
+            result = await call_tool(
+                "execute_all_tasks",
+                {
+                    "workspace_id": workspace_id,
+                },
+            )
+
+        # 验证结果
+        assert len(result) == 1
+        assert isinstance(result[0], TextContent)
+        data = json.loads(result[0].text)
+        assert data["success"] is True
+        assert data["workspace_id"] == workspace_id
+        assert data["total_tasks"] == 3
+        assert data["completed_tasks"] == 3
+        assert data["failed_tasks"] == 0
+        assert len(data["task_results"]) == 3
+
+        # 验证每个任务都成功
+        for i, task_result in enumerate(data["task_results"]):
+            assert task_result["success"] is True
+            assert task_result["task_id"] == task_ids[i]
+            assert task_result["passed"] is True
+            assert task_result["retry_count"] == 0
+
+        # 验证 generate_code 和 review_code 被调用了3次（每个任务1次）
+        assert mock_generate.call_count == 3
+        assert mock_review.call_count == 3

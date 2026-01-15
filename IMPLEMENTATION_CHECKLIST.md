@@ -444,18 +444,18 @@
 
 #### 7.1 统一集成
 
-- [ ] 检查所有第2周工具已集成到 `mcp_server.py`
-- [ ] 更新 `list_tools()` 函数
-- [ ] 更新 `call_tool()` 函数
-- [ ] 确保错误处理一致
+- [x] 检查所有第2周工具已集成到 `mcp_server.py` - ✅ 已验证（`execute_task` 和 `execute_all_tasks` 已集成）
+- [x] 更新 `list_tools()` 函数 - ✅ 已完成（两个工具已在 `list_tools()` 中注册，工具总数 25 个）
+- [x] 更新 `call_tool()` 函数 - ✅ 已完成（两个工具已在 `call_tool()` 中处理）
+- [x] 确保错误处理一致 - ✅ 已验证（使用统一的 `_handle_error` 函数，捕获 `ValidationError`, `WorkspaceNotFoundError`, `TaskNotFoundError`, `AgentOrchestratorError`）
 
 #### 7.2 编写集成测试
 
-- [ ] 创建集成测试场景：
-  - [ ] 单个任务执行（Review 通过）
-  - [ ] 单个任务执行（Review 失败重试）
-  - [ ] 所有任务循环执行
-- [ ] 运行集成测试并确保通过
+- [x] 创建集成测试场景：
+  - [x] 单个任务执行（Review 通过） - ✅ `test_integration_execute_task_review_passed`
+  - [x] 单个任务执行（Review 失败重试） - ✅ `test_integration_execute_task_review_failed_retry`
+  - [x] 所有任务循环执行 - ✅ `test_integration_execute_all_tasks_loop`
+- [x] 运行集成测试并确保通过 - ✅ 所有3个集成测试通过
 
 #### 7.3 提交代码
 
