@@ -43,6 +43,7 @@ from src.tools.test_path_question import ask_test_path, submit_test_path
 from src.tools.test_reviewer import review_tests
 from src.tools.trd_confirmation import check_trd_confirmation, confirm_trd, modify_trd
 from src.tools.trd_generator import generate_trd
+from src.tools.workflow_orchestrator import execute_full_workflow
 from src.tools.workflow_status import get_workflow_status
 
 logger = setup_logger(__name__)
@@ -418,7 +419,9 @@ async def list_tools() -> list[Tool]:
                     "workspace_id": {"type": "string", "description": "工作区ID"},
                     "max_review_retries": {
                         "type": "integer",
-                        "description": "每个任务的最大 Review 重试次数（可选，默认为 3）",
+                        "description": (
+                            "每个任务的最大 Review 重试次数（可选，默认为 3）"
+                        ),
                     },
                 },
                 "required": ["workspace_id"],
@@ -446,10 +449,68 @@ async def list_tools() -> list[Tool]:
                     "workspace_id": {"type": "string", "description": "工作区ID"},
                     "stage": {
                         "type": "string",
-                        "description": "阶段名称（prd, trd, tasks, code, test, coverage）",
+                        "description": (
+                            "阶段名称（prd, trd, tasks, code, test, coverage）"
+                        ),
                     },
                 },
                 "required": ["workspace_id", "stage"],
+            },
+        ),
+        # 完整工作流编排工具
+        Tool(
+            name="execute_full_workflow",
+            description="执行完整工作流（从需求输入到代码完成和覆盖率分析）",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "项目路径（自动确认模式必需，交互模式可选）",
+                    },
+                    "requirement_name": {
+                        "type": "string",
+                        "description": "需求名称（自动确认模式必需，交互模式可选）",
+                    },
+                    "requirement_url": {
+                        "type": "string",
+                        "description": (
+                            "需求URL或文件路径（自动确认模式必需，交互模式可选）"
+                        ),
+                    },
+                    "workspace_path": {
+                        "type": "string",
+                        "description": (
+                            "工作区路径（可选，默认使用项目路径下的 "
+                            ".agent-orchestrator）"
+                        ),
+                    },
+                    "workspace_id": {
+                        "type": "string",
+                        "description": "工作区ID（用于恢复工作流，可选）",
+                    },
+                    "auto_confirm": {
+                        "type": "boolean",
+                        "description": (
+                            "是否自动确认（默认为 True）。"
+                            "True: 自动确认模式；False: 交互模式"
+                        ),
+                    },
+                    "max_review_retries": {
+                        "type": "integer",
+                        "description": (
+                            "每个任务的最大 Review 重试次数（可选，默认为 3）"
+                        ),
+                    },
+                    "interaction_response": {
+                        "type": "object",
+                        "description": (
+                            "交互响应（用于恢复工作流，可选）。"
+                            "包含 interaction_type 和相应的响应数据"
+                        ),
+                    },
+                },
+                "required": [],
             },
         ),
     ]
@@ -723,6 +784,22 @@ async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextCon
         elif name == "check_stage_ready":
             result = check_stage_ready(
                 workspace_id=arguments["workspace_id"], stage=arguments["stage"]
+            )
+            return [
+                TextContent(type="text", text=json.dumps(result, ensure_ascii=False))
+            ]
+
+        # 完整工作流编排工具
+        elif name == "execute_full_workflow":
+            result = execute_full_workflow(
+                project_path=arguments.get("project_path"),
+                requirement_name=arguments.get("requirement_name"),
+                requirement_url=arguments.get("requirement_url"),
+                workspace_path=arguments.get("workspace_path"),
+                workspace_id=arguments.get("workspace_id"),
+                auto_confirm=arguments.get("auto_confirm", True),
+                max_review_retries=arguments.get("max_review_retries", 3),
+                interaction_response=arguments.get("interaction_response"),
             )
             return [
                 TextContent(type="text", text=json.dumps(result, ensure_ascii=False))

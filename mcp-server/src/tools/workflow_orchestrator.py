@@ -468,7 +468,9 @@ def execute_full_workflow(
                 break
 
         # 只有在步骤未被跳过且循环达到最大次数时才抛出错误
-        if prd_loop_count >= max_prd_loops and not _should_skip_step(workspace_id, 2, "PRD 生成和确认"):
+        if prd_loop_count >= max_prd_loops and not _should_skip_step(
+            workspace_id, 2, "PRD 生成和确认"
+        ):
             # 更新工作流状态：步骤2失败
             _update_workflow_state(workspace_id, 2, "PRD 生成和确认", "failed")
             raise AgentOrchestratorError("PRD 循环达到最大重试次数")
@@ -605,7 +607,9 @@ def execute_full_workflow(
                 break
 
         # 只有在步骤未被跳过且循环达到最大次数时才抛出错误
-        if trd_loop_count >= max_trd_loops and not _should_skip_step(workspace_id, 3, "TRD 生成和确认"):
+        if trd_loop_count >= max_trd_loops and not _should_skip_step(
+            workspace_id, 3, "TRD 生成和确认"
+        ):
             # 更新工作流状态：步骤3失败
             _update_workflow_state(workspace_id, 3, "TRD 生成和确认", "failed")
             raise AgentOrchestratorError("TRD 循环达到最大重试次数")

@@ -26,8 +26,8 @@ class TestMCPServer:
         tools = await list_tools()
 
         assert (
-            len(tools) == 27
-        )  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 2 个测试路径询问工具 + 2 个任务执行工具 + 1 个工作流状态查询工具 + 1 个阶段依赖检查工具 + 8 个 SKILL 工具
+            len(tools) == 28
+        )  # 5 个基础设施工具 + 2 个工作流编排工具 + 3 个 PRD 确认工具 + 3 个 TRD 确认工具 + 2 个测试路径询问工具 + 2 个任务执行工具 + 1 个工作流状态查询工具 + 1 个阶段依赖检查工具 + 8 个 SKILL 工具 + 1 个完整工作流编排工具
 
         # 检查基础设施工具
         tool_names = [tool.name for tool in tools]
@@ -64,6 +64,9 @@ class TestMCPServer:
 
         # 检查阶段依赖检查工具
         assert "check_stage_ready" in tool_names
+
+        # 检查完整工作流编排工具
+        assert "execute_full_workflow" in tool_names
 
         # 检查 SKILL 工具
         assert "generate_prd" in tool_names
@@ -2000,3 +2003,200 @@ class TestMCPServer:
                 assert status["prd_status"] == "completed"
                 assert status["trd_status"] == "in_progress"
                 assert status["tasks_status"] == "pending"
+
+    @pytest.mark.asyncio
+    async def test_execute_full_workflow_via_mcp_auto_confirm(
+        self, temp_dir, sample_project_dir, workspace_manager
+    ):
+        """测试通过 MCP 调用 execute_full_workflow 工具（自动确认模式）。"""
+        from unittest.mock import patch
+
+        project_path = str(sample_project_dir)
+        requirement_name = "测试需求"
+        requirement_url = "https://example.com/requirement.md"
+
+        # Mock 所有子工具
+        with (
+            patch("src.tools.workflow_orchestrator.submit_orchestrator_answers") as mock_submit,
+            patch("src.tools.workflow_orchestrator.generate_prd") as mock_generate_prd,
+            patch("src.tools.workflow_orchestrator.confirm_prd") as mock_confirm_prd,
+            patch("src.tools.workflow_orchestrator.generate_trd") as mock_generate_trd,
+            patch("src.tools.workflow_orchestrator.confirm_trd") as mock_confirm_trd,
+            patch("src.tools.workflow_orchestrator.decompose_tasks") as mock_decompose,
+            patch("src.tools.workflow_orchestrator.execute_all_tasks") as mock_execute_tasks,
+            patch("src.tools.workflow_orchestrator.ask_test_path") as mock_ask_test_path,
+            patch("src.tools.workflow_orchestrator.submit_test_path") as mock_submit_test_path,
+            patch("src.tools.workflow_orchestrator.generate_tests") as mock_generate_tests,
+            patch("src.tools.workflow_orchestrator.analyze_coverage") as mock_analyze_coverage,
+            patch("src.tools.workflow_orchestrator.check_stage_ready") as mock_check_stage,
+            patch("src.tools.workflow_orchestrator.get_workflow_status") as mock_get_status,
+            patch("src.tools.workflow_orchestrator._update_workflow_state") as mock_update_state,
+            patch("src.tools.workflow_orchestrator._get_workflow_state") as mock_get_state,
+            patch("src.tools.workflow_orchestrator._should_skip_step") as mock_skip_step,
+            patch("src.mcp_server.workspace_manager", workspace_manager),
+        ):
+            workspace_id = "req-test-workflow-001"
+            mock_skip_step.return_value = False
+            mock_submit.return_value = {"success": True, "workspace_id": workspace_id}
+            mock_generate_prd.return_value = {
+                "success": True,
+                "prd_path": "/path/to/PRD.md",
+            }
+            mock_confirm_prd.return_value = {"success": True}
+            mock_generate_trd.return_value = {
+                "success": True,
+                "trd_path": "/path/to/TRD.md",
+            }
+            mock_confirm_trd.return_value = {"success": True}
+            mock_decompose.return_value = {
+                "success": True,
+                "tasks_json_path": "/path/to/tasks.json",
+                "task_count": 1,
+            }
+            mock_execute_tasks.return_value = {
+                "success": True,
+                "total_tasks": 1,
+                "completed_tasks": 1,
+                "failed_tasks": 0,
+            }
+            mock_ask_test_path.return_value = {
+                "success": True,
+                "question": {"default": "/path/to/tests"},
+            }
+            mock_submit_test_path.return_value = {"success": True}
+            mock_generate_tests.return_value = {
+                "success": True,
+                "test_files": ["test_1.py"],
+                "test_count": 1,
+            }
+            mock_analyze_coverage.return_value = {
+                "success": True,
+                "coverage": 80.0,
+                "coverage_report_path": "/path/to/coverage.html",
+            }
+            mock_check_stage.return_value = {"ready": True, "reason": "可以开始"}
+            mock_get_status.return_value = {
+                "success": True,
+                "stages": {
+                    "prd": {"status": "completed"},
+                    "trd": {"status": "completed"},
+                    "tasks": {"status": "completed"},
+                    "code": {"status": "completed"},
+                    "test": {"status": "completed"},
+                    "coverage": {"status": "completed"},
+                },
+                "workflow_progress": {"completed_stages": 6},
+                "next_available_stages": [],
+            }
+            mock_update_state.return_value = None
+            mock_get_state.return_value = {}
+
+            # 调用工具
+            result = await call_tool(
+                "execute_full_workflow",
+                {
+                    "project_path": project_path,
+                    "requirement_name": requirement_name,
+                    "requirement_url": requirement_url,
+                    "auto_confirm": True,
+                },
+            )
+
+            # 验证结果
+            assert len(result) == 1
+            data = json.loads(result[0].text)
+            assert data["success"] is True
+            assert "workspace_id" in data
+            assert "workflow_steps" in data
+            assert len(data["workflow_steps"]) == 8
+            assert "final_status" in data
+
+    @pytest.mark.asyncio
+    async def test_execute_full_workflow_via_mcp_interactive(
+        self, temp_dir, sample_project_dir, workspace_manager
+    ):
+        """测试通过 MCP 调用 execute_full_workflow 工具（交互模式）。"""
+        from unittest.mock import patch
+
+        project_path = str(sample_project_dir)
+        requirement_name = "测试需求"
+        requirement_url = "https://example.com/requirement.md"
+
+        # Mock 所有子工具
+        with (
+            patch("src.tools.workflow_orchestrator.submit_orchestrator_answers") as mock_submit,
+            patch("src.tools.workflow_orchestrator.generate_prd") as mock_generate_prd,
+            patch("src.tools.workflow_orchestrator.check_prd_confirmation") as mock_check_prd,
+            patch("src.tools.workflow_orchestrator.confirm_prd") as mock_confirm_prd,
+            patch("src.tools.workflow_orchestrator.check_stage_ready") as mock_check_stage,
+            patch("src.tools.workflow_orchestrator.get_workflow_status") as mock_get_status,
+            patch("src.tools.workflow_orchestrator._update_workflow_state") as mock_update_state,
+            patch("src.tools.workflow_orchestrator._get_workflow_state") as mock_get_state,
+            patch("src.tools.workflow_orchestrator._should_skip_step") as mock_skip_step,
+            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch("src.tools.prd_confirmation.WorkspaceManager") as mock_prd_ws_manager,
+            patch("src.mcp_server.workspace_manager", workspace_manager),
+        ):
+            workspace_id = "req-test-workflow-002"
+            mock_workspace_instance = workspace_manager
+            mock_ws_manager.return_value = mock_workspace_instance
+            mock_prd_ws_manager.return_value = mock_workspace_instance
+            mock_skip_step.return_value = False
+            mock_submit.return_value = {"success": True, "workspace_id": workspace_id}
+            mock_generate_prd.return_value = {
+                "success": True,
+                "prd_path": "/path/to/PRD.md",
+            }
+            mock_check_prd.return_value = {
+                "success": True,
+                "prd_path": "/path/to/PRD.md",
+                "prd_preview": "PRD 预览内容",
+            }
+            mock_check_stage.return_value = {"ready": True, "reason": "可以开始"}
+            mock_get_status.return_value = {
+                "success": True,
+                "stages": {
+                    "prd": {"status": "pending"},
+                },
+                "workflow_progress": {"completed_stages": 1},
+                "next_available_stages": ["trd"],
+            }
+            mock_update_state.return_value = None
+            mock_get_state.return_value = {}
+
+            # 第一次调用：应该返回 PRD 确认请求
+            result = await call_tool(
+                "execute_full_workflow",
+                {
+                    "project_path": project_path,
+                    "requirement_name": requirement_name,
+                    "requirement_url": requirement_url,
+                    "auto_confirm": False,
+                },
+            )
+
+            # 验证结果
+            assert len(result) == 1
+            data = json.loads(result[0].text)
+            assert data["success"] is True
+            assert data.get("interaction_required") is True
+            assert data.get("interaction_type") == "prd_confirmation"
+            assert "prd_path" in data
+            assert "prd_preview" in data
+
+    @pytest.mark.asyncio
+    async def test_execute_full_workflow_via_mcp_validation_error(self):
+        """测试通过 MCP 调用 execute_full_workflow 工具 - 验证错误。"""
+        # 缺少必需参数
+        result = await call_tool(
+            "execute_full_workflow",
+            {
+                "auto_confirm": True,
+                # 缺少 project_path, requirement_name, requirement_url
+            },
+        )
+
+        assert len(result) == 1
+        data = json.loads(result[0].text)
+        assert data["success"] is False
+        assert "error" in data
