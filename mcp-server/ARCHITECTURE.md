@@ -206,6 +206,8 @@ MCP Server (中央编排服务)
 MCP 工具层
     ├─ 基础设施工具 (create_workspace, get_workspace 等)
     ├─ 工作流编排工具 (orchestrator_questions, prd_confirmation, trd_confirmation, test_path_question, task_executor)
+    ├─ 完整工作流编排工具 (execute_full_workflow)
+    ├─ 多Agent支持工具 (get_workflow_status, check_stage_ready)
     └─ SKILL 工具 (generate_prd, generate_trd 等)
         ↓ 调用核心实现
 mcp-server/src/tools/*.py (工作流编排工具 + 8个子SKILL模块)
@@ -213,6 +215,27 @@ mcp-server/src/tools/*.py (工作流编排工具 + 8个子SKILL模块)
 WorkspaceManager / TaskManager
     ↓ 文件系统操作
 项目文件系统
+```
+
+### 完整工作流编排流程
+
+```
+用户请求 execute_full_workflow
+    ↓
+MCP Server.call_tool("execute_full_workflow", {...})
+    ↓
+workflow_orchestrator.execute_full_workflow(...)
+    ↓ 执行8个步骤
+    ├─ 1. submit_orchestrator_answers (创建工作区)
+    ├─ 2. generate_prd → confirm_prd (PRD生成和确认)
+    ├─ 3. generate_trd → confirm_trd (TRD生成和确认)
+    ├─ 4. decompose_tasks (任务分解)
+    ├─ 5. execute_all_tasks (任务执行循环)
+    ├─ 6. ask_test_path → submit_test_path (询问测试路径)
+    ├─ 7. generate_tests (生成测试)
+    └─ 8. analyze_coverage (生成覆盖率报告)
+    ↓
+返回工作流执行结果
 ```
 
 ### 示例：生成 PRD

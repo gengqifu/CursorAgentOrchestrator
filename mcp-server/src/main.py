@@ -13,9 +13,9 @@ Python 版本要求：>= 3.9
     2. Ctrl+C (SIGINT) - 优雅关闭
     3. kill <PID> (SIGTERM) - 优雅关闭
 """
-import sys
-import signal
 import atexit
+import signal
+import sys
 from pathlib import Path
 
 # 检查 Python 版本
@@ -40,7 +40,7 @@ _cleanup_called = False
 
 def safe_log_info(message: str) -> None:
     """安全地记录日志信息，避免在关闭时写入已关闭的文件流。
-    
+
     Args:
         message: 日志消息
     """
@@ -48,7 +48,11 @@ def safe_log_info(message: str) -> None:
         # 检查日志处理器是否仍然可用
         if logger.handlers:
             for handler in logger.handlers:
-                if hasattr(handler, 'stream') and handler.stream and not handler.stream.closed:
+                if (
+                    hasattr(handler, "stream")
+                    and handler.stream
+                    and not handler.stream.closed
+                ):
                     logger.info(message)
                     return
         # 如果日志不可用，使用 print 输出到 stderr
@@ -65,38 +69,38 @@ def safe_log_info(message: str) -> None:
 def cleanup_resources() -> None:
     """清理资源。"""
     global _cleanup_called
-    
+
     # 避免重复清理
     if _cleanup_called:
         return
-    
+
     _cleanup_called = True
-    
+
     safe_log_info("清理资源...")
-    
+
     # TODO: 添加资源清理逻辑
     # - 关闭文件句柄
     # - 释放文件锁
     # - 保存工作区状态
-    
+
     safe_log_info("资源清理完成")
 
 
 def signal_handler(signum: int, frame) -> None:
     """信号处理器，用于优雅关闭。
-    
+
     Args:
         signum: 信号编号
         frame: 当前堆栈帧
     """
     global _shutdown_requested
-    
+
     signal_name = signal.Signals(signum).name
     safe_log_info(f"收到信号 {signal_name} ({signum})，准备关闭...")
-    
+
     _shutdown_requested = True
     cleanup_resources()
-    
+
     safe_log_info("MCP Server 已关闭")
     sys.exit(0)
 
@@ -105,10 +109,10 @@ def setup_signal_handlers() -> None:
     """设置信号处理器。"""
     # SIGINT: Ctrl+C
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     # SIGTERM: kill 命令默认信号
     signal.signal(signal.SIGTERM, signal_handler)
-    
+
     # 注册退出时的清理函数
     atexit.register(cleanup_resources)
 
@@ -116,23 +120,30 @@ def setup_signal_handlers() -> None:
 if __name__ == "__main__":
     # 设置信号处理器
     setup_signal_handlers()
-    
-    logger.info(f"MCP Server 启动中... (Python {sys.version_info.major}.{sys.version_info.minor})")
+
+    logger.info(
+        f"MCP Server 启动中... (Python {sys.version_info.major}.{sys.version_info.minor})"
+    )
     logger.info("提示：使用 Ctrl+C 关闭 Server")
-    
+
     try:
         # 导入并运行 MCP Server
         import asyncio
+
         from src.mcp_server import run_server
-        
+
         logger.info("MCP Server 已启动，等待连接...")
         logger.info("可用工具：")
-        logger.info("  基础设施工具：create_workspace, get_workspace, update_workspace_status, get_tasks, update_task_status")
-        logger.info("  SKILL 工具：generate_prd, generate_trd, decompose_tasks, generate_code, review_code, generate_tests, review_tests, analyze_coverage")
-        
+        logger.info(
+            "  基础设施工具：create_workspace, get_workspace, update_workspace_status, get_tasks, update_task_status"
+        )
+        logger.info(
+            "  SKILL 工具：generate_prd, generate_trd, decompose_tasks, generate_code, review_code, generate_tests, review_tests, analyze_coverage"
+        )
+
         # 运行 MCP Server（使用 stdio 通信）
         asyncio.run(run_server())
-        
+
     except KeyboardInterrupt:
         safe_log_info("收到键盘中断信号")
     except Exception as e:

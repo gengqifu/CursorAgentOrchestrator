@@ -1,14 +1,11 @@
 """TRD 确认工具测试 - TDD 第一步：编写失败的测试。"""
-import pytest
-from pathlib import Path
+
 from unittest.mock import patch
 
-from src.tools.trd_confirmation import (
-    check_trd_confirmation,
-    confirm_trd,
-    modify_trd
-)
+import pytest
+
 from src.core.exceptions import WorkspaceNotFoundError
+from src.tools.trd_confirmation import check_trd_confirmation, confirm_trd, modify_trd
 from tests.conftest import create_test_workspace
 
 
@@ -20,23 +17,23 @@ class TestTRDConfirmation:
     ):
         """测试 TRD 存在时的确认请求。"""
         # Arrange
-        workspace_id = create_test_workspace(
-            workspace_manager, sample_project_dir
-        )
+        workspace_id = create_test_workspace(workspace_manager, sample_project_dir)
 
         # 创建 TRD 文件
         from src.core.config import Config
+
         config = Config()
         workspace_dir = config.get_workspace_path(workspace_id)
         trd_path = workspace_dir / "TRD.md"
-        trd_path.write_text("# TRD 文档\n\n这是测试 TRD 内容。", encoding='utf-8')
+        trd_path.write_text("# TRD 文档\n\n这是测试 TRD 内容。", encoding="utf-8")
 
         # 更新工作区文件路径
         workspace = workspace_manager.get_workspace(workspace_id)
         workspace["files"]["trd_path"] = str(trd_path)
         meta_file = workspace_dir / "workspace.json"
         import json
-        with open(meta_file, 'w', encoding='utf-8') as f:
+
+        with open(meta_file, "w", encoding="utf-8") as f:
             json.dump(workspace, f, ensure_ascii=False, indent=2)
 
         # Act
@@ -55,9 +52,7 @@ class TestTRDConfirmation:
     ):
         """测试 TRD 不存在时的错误。"""
         # Arrange
-        workspace_id = create_test_workspace(
-            workspace_manager, sample_project_dir
-        )
+        workspace_id = create_test_workspace(workspace_manager, sample_project_dir)
 
         # Act & Assert
         result = check_trd_confirmation(workspace_id)
@@ -77,28 +72,30 @@ class TestTRDConfirmation:
     ):
         """测试读取 TRD 文件失败时的处理。"""
         # Arrange
-        workspace_id = create_test_workspace(
-            workspace_manager, sample_project_dir
-        )
+        workspace_id = create_test_workspace(workspace_manager, sample_project_dir)
 
         from src.core.config import Config
+
         config = Config()
         workspace_dir = config.get_workspace_path(workspace_id)
         trd_path = workspace_dir / "TRD.md"
 
         # 创建一个无法读取的文件（使用 mock 模拟读取失败）
-        trd_path.write_text("test", encoding='utf-8')
+        trd_path.write_text("test", encoding="utf-8")
 
         # 更新工作区文件路径
         workspace = workspace_manager.get_workspace(workspace_id)
         workspace["files"]["trd_path"] = str(trd_path)
         meta_file = workspace_dir / "workspace.json"
         import json
-        with open(meta_file, 'w', encoding='utf-8') as f:
+
+        with open(meta_file, "w", encoding="utf-8") as f:
             json.dump(workspace, f, ensure_ascii=False, indent=2)
 
         # 使用 mock 模拟读取文件时抛出异常
-        with patch('pathlib.Path.read_text', side_effect=PermissionError("Permission denied")):
+        with patch(
+            "pathlib.Path.read_text", side_effect=PermissionError("Permission denied")
+        ):
             # Act
             result = check_trd_confirmation(workspace_id)
 
@@ -108,14 +105,10 @@ class TestTRDConfirmation:
             assert result["interaction_type"] == "trd_confirmation"
             assert result["trd_preview"] == "无法读取 TRD 内容"
 
-    def test_confirm_trd_success(
-        self, temp_dir, sample_project_dir, workspace_manager
-    ):
+    def test_confirm_trd_success(self, temp_dir, sample_project_dir, workspace_manager):
         """测试确认 TRD 成功。"""
         # Arrange
-        workspace_id = create_test_workspace(
-            workspace_manager, sample_project_dir
-        )
+        workspace_id = create_test_workspace(workspace_manager, sample_project_dir)
 
         # Act
         result = confirm_trd(workspace_id)
@@ -134,14 +127,10 @@ class TestTRDConfirmation:
         with pytest.raises(WorkspaceNotFoundError):
             confirm_trd("non-existent-workspace")
 
-    def test_modify_trd_success(
-        self, temp_dir, sample_project_dir, workspace_manager
-    ):
+    def test_modify_trd_success(self, temp_dir, sample_project_dir, workspace_manager):
         """测试修改 TRD 成功。"""
         # Arrange
-        workspace_id = create_test_workspace(
-            workspace_manager, sample_project_dir
-        )
+        workspace_id = create_test_workspace(workspace_manager, sample_project_dir)
 
         # Act
         result = modify_trd(workspace_id)
@@ -160,14 +149,10 @@ class TestTRDConfirmation:
         with pytest.raises(WorkspaceNotFoundError):
             modify_trd("non-existent-workspace")
 
-    def test_trd_modify_loop(
-        self, temp_dir, sample_project_dir, workspace_manager
-    ):
+    def test_trd_modify_loop(self, temp_dir, sample_project_dir, workspace_manager):
         """测试 TRD 修改循环。"""
         # Arrange
-        workspace_id = create_test_workspace(
-            workspace_manager, sample_project_dir
-        )
+        workspace_id = create_test_workspace(workspace_manager, sample_project_dir)
 
         # 1. 确认 TRD
         confirm_result = confirm_trd(workspace_id)

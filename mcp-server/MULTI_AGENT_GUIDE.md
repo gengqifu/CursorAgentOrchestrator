@@ -260,6 +260,8 @@ TRD (依赖 PRD 完成)
 - `test_multi_agent_state_dependency_check` - 状态依赖检查测试
 - `test_multi_agent_file_lock_concurrency` - 文件锁并发安全测试
 
+**测试结果**: ✅ **全部通过** (4/4)
+
 运行测试：
 
 ```bash
@@ -267,6 +269,8 @@ cd mcp-server
 source venv/bin/activate
 python3 -m pytest tests/test_mcp_server.py -k "multi_agent" -v
 ```
+
+详细测试结果请参考 [MULTI_AGENT_TEST_RESULTS.md](MULTI_AGENT_TEST_RESULTS.md)。
 
 ## 常见问题
 
@@ -291,3 +295,5 @@ A: 不建议。虽然文件锁会确保数据安全，但多个Agent处理同一
 - [TOOLS.md](TOOLS.md) - 完整工具列表和说明
 - [README.md](README.md) - 项目概述和安装说明
 - [CURSOR_INTEGRATION.md](CURSOR_INTEGRATION.md) - Cursor IDE 集成指南
+- [WORKFLOW_GUIDE.md](../WORKFLOW_GUIDE.md) - 完整工作流使用指南
+- [MULTI_AGENT_TEST_RESULTS.md](MULTI_AGENT_TEST_RESULTS.md) - 多Agent并行测试结果报告

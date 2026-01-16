@@ -2,7 +2,7 @@
 
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Test Coverage](https://img.shields.io/badge/coverage-95.57%25-brightgreen.svg)](mcp-server/htmlcov/index.html)
+[![Test Coverage](https://img.shields.io/badge/coverage-95.73%25-brightgreen.svg)](mcp-server/htmlcov/index.html)
 [![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 适配 Cursor IDE 的智能开发流程编排系统，通过 MCP (Model Context Protocol) 协议集成到 Cursor 中。
@@ -37,7 +37,7 @@ Agent Orchestrator 是一个智能开发流程编排系统，提供从需求分�
 - 🔄 **完整工作流编排**：一键执行从需求到代码完成的完整流程
 - 🤝 **Multi-Agent 架构**：多智能体协作，提升代码质量
 - 📦 **MCP 协议集成**：无缝集成到 Cursor IDE
-- 🧪 **TDD 开发模式**：测试覆盖率 95.57%（超过 90% 要求）
+- 🧪 **TDD 开发模式**：测试覆盖率 95.73%（超过 90% 要求，280 个测试用例全部通过）
 - 🐍 **Python 3.9+ 兼容**：现代化 Python 代码
 - 🔒 **零依赖设计**：最小化外部依赖
 - 🛡️ **安全保护**：完善的输入验证和错误处理
@@ -467,8 +467,15 @@ python3 -m mypy src
 - [架构设计](mcp-server/ARCHITECTURE.md) - 系统架构和技术设计
 - [工具文档](mcp-server/TOOLS.md) - 所有工具的详细说明
 - [完整工作流使用指南](WORKFLOW_GUIDE.md) - 完整工作流编排工具使用指南
+- [多Agent协作指南](mcp-server/MULTI_AGENT_GUIDE.md) - 多Agent协作详细指南
 - [安装指南](mcp-server/INSTALL.md) - 详细的安装和配置步骤
 - [Python 3 兼容性](mcp-server/PYTHON3_COMPATIBILITY.md) - Python 3.9+ 兼容性说明
+
+### 测试报告
+
+- [端到端测试结果](mcp-server/E2E_TEST_RESULTS.md) - 完整工作流端到端测试结果
+- [多Agent并行测试结果](mcp-server/MULTI_AGENT_TEST_RESULTS.md) - 多Agent并行测试结果
+- [问题记录和修复](mcp-server/ISSUES_AND_FIXES.md) - 问题记录和修复报告
 
 ## ❓ 常见问题
 
@@ -508,7 +515,14 @@ A: 支持 macOS、Linux 和 Windows。每个平台都有对应的启动脚本。
 
 ### Q: 测试覆盖率要求是多少？
 
-A: 项目要求测试覆盖率 >= 90%，当前覆盖率为 95.57%（101 个测试用例全部通过）。
+A: 项目要求测试覆盖率 >= 90%，当前覆盖率为 **95.73%**（280 个测试用例全部通过）。
+
+### Q: 如何查看测试报告？
+
+A: 查看以下测试报告文档：
+- [端到端测试结果](mcp-server/E2E_TEST_RESULTS.md) - 完整工作流端到端测试结果
+- [多Agent并行测试结果](mcp-server/MULTI_AGENT_TEST_RESULTS.md) - 多Agent并行测试结果
+- [问题记录和修复](mcp-server/ISSUES_AND_FIXES.md) - 问题记录和修复报告
 
 ## 🤝 贡献
 

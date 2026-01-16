@@ -218,7 +218,50 @@ python src\main.py
 
 ## 工作流程示例
 
-### 完整开发流程
+### 方式1：使用完整工作流编排工具（推荐）
+
+**自动确认模式**（一次性完成所有步骤）：
+
+```bash
+@agent-orchestrator execute_full_workflow \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=https://example.com/req \
+  auto_confirm=true
+```
+
+**交互模式**（在关键步骤暂停，等待用户确认）：
+
+```bash
+# 第一次调用：开始工作流
+@agent-orchestrator execute_full_workflow \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=https://example.com/req \
+  auto_confirm=false
+
+# 返回 PRD 确认请求，用户确认后继续
+@agent-orchestrator execute_full_workflow \
+  workspace_id=req-xxx \
+  auto_confirm=false \
+  interaction_response='{"action": "confirm"}'
+
+# 返回 TRD 确认请求，用户确认后继续
+@agent-orchestrator execute_full_workflow \
+  workspace_id=req-xxx \
+  auto_confirm=false \
+  interaction_response='{"action": "confirm"}'
+
+# 返回测试路径询问，用户提供路径后继续
+@agent-orchestrator execute_full_workflow \
+  workspace_id=req-xxx \
+  auto_confirm=false \
+  interaction_response='{"answer": "/path/to/tests"}'
+```
+
+详细使用说明请参考 [WORKFLOW_GUIDE.md](../WORKFLOW_GUIDE.md)。
+
+### 方式2：分步骤调用（手动控制）
 
 1. **创建需求工作区**（通过 MCP 工具）
    ```
@@ -259,6 +302,27 @@ python src\main.py
    ```
    @agent-orchestrator analyze_coverage workspace_id project_path
    ```
+
+### 多Agent协作示例
+
+多个Agent可以协作完成开发流程，详细说明请参考 [MULTI_AGENT_GUIDE.md](MULTI_AGENT_GUIDE.md)。
+
+**示例：Agent A 生成 PRD → Agent B 生成 TRD**
+
+```bash
+# Agent A: 生成 PRD
+@agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
+@agent-orchestrator confirm_prd workspace_id=req-xxx
+
+# Agent B: 查询工作流状态
+@agent-orchestrator get_workflow_status workspace_id=req-xxx
+
+# Agent B: 检查 TRD 是否可以开始
+@agent-orchestrator check_stage_ready workspace_id=req-xxx stage=trd
+
+# Agent B: 生成 TRD
+@agent-orchestrator generate_trd workspace_id=req-xxx
+```
 
 ## 故障排查
 

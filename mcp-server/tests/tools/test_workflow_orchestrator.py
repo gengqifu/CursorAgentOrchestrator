@@ -9,7 +9,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.core.exceptions import (
-    AgentOrchestratorError,
     ValidationError,
     WorkspaceNotFoundError,
 )
@@ -290,7 +289,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.check_prd_confirmation"
             ) as mock_check_prd,
@@ -454,7 +455,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.check_trd_confirmation"
             ) as mock_check_trd,
@@ -960,7 +963,9 @@ class TestWorkflowOrchestrator:
         workspace_id = "req-test-008"
 
         with (
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch("src.tools.workflow_orchestrator.generate_prd") as mock_generate_prd,
             patch("src.tools.workflow_orchestrator.confirm_prd") as mock_confirm_prd,
             patch("src.tools.workflow_orchestrator.generate_trd") as mock_generate_trd,
@@ -1134,7 +1139,10 @@ class TestWorkflowOrchestrator:
             # Assert
             assert result["success"] is False
             # 验证错误消息包含 PRD 循环达到最大重试次数
-            assert "PRD 循环达到最大重试次数" in result["error"] or "PRD 确认失败" in result["error"]
+            assert (
+                "PRD 循环达到最大重试次数" in result["error"]
+                or "PRD 确认失败" in result["error"]
+            )
 
     def test_trd_stage_not_ready(
         self, temp_dir, monkeypatch, workspace_manager, sample_project_dir
@@ -1253,7 +1261,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator.check_trd_confirmation"
             ) as mock_check_trd,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
         ):
             workspace_id = "req-test-011"
             mock_workspace_instance = MagicMock()
@@ -1456,7 +1466,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
         ):
             workspace_id = "req-test-012"
             mock_update_state.return_value = None
@@ -1546,7 +1558,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.check_prd_confirmation"
             ) as mock_check_prd,
@@ -1791,7 +1805,9 @@ class TestWorkflowOrchestrator:
         _update_workflow_state(workspace_id, 2, "PRD 生成和确认", "completed")
 
         with (
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.submit_orchestrator_answers"
             ) as mock_submit,
@@ -1838,7 +1854,9 @@ class TestWorkflowOrchestrator:
             }
             mock_ws_manager.return_value = mock_workspace_instance
             mock_get_state.return_value = {
-                "completed_steps": [{"step": 1, "name": "创建工作区", "status": "completed"}],
+                "completed_steps": [
+                    {"step": 1, "name": "创建工作区", "status": "completed"}
+                ],
             }
             mock_skip_step.side_effect = lambda ws_id, step_num, step_name: (
                 step_num == 2 and step_name == "PRD 生成和确认"
@@ -1918,7 +1936,9 @@ class TestWorkflowOrchestrator:
         requirement_url = "https://example.com/req.md"
 
         with (
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.submit_orchestrator_answers"
             ) as mock_submit,
@@ -2044,7 +2064,9 @@ class TestWorkflowOrchestrator:
 
         # Act & Assert
         # 在 auto_confirm=True 模式下，会先检查 requirement_name 和 requirement_url
-        with pytest.raises(ValidationError, match="requirement_name 不能为空|requirement_url 不能为空"):
+        with pytest.raises(
+            ValidationError, match="requirement_name 不能为空|requirement_url 不能为空"
+        ):
             execute_full_workflow(
                 project_path=project_path,
                 requirement_name="",
@@ -2101,7 +2123,9 @@ class TestWorkflowOrchestrator:
         _update_workflow_state(workspace_id, 1, "创建工作区", "completed")
 
         with (
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch("src.tools.workflow_orchestrator.generate_prd") as mock_generate_prd,
             patch("src.tools.workflow_orchestrator.confirm_prd") as mock_confirm_prd,
             patch("src.tools.workflow_orchestrator.generate_trd") as mock_generate_trd,
@@ -2147,7 +2171,9 @@ class TestWorkflowOrchestrator:
             }
             mock_ws_manager.return_value = mock_workspace_instance
             mock_get_state.return_value = {
-                "completed_steps": [{"step": 1, "name": "创建工作区", "status": "completed"}],
+                "completed_steps": [
+                    {"step": 1, "name": "创建工作区", "status": "completed"}
+                ],
             }
             mock_skip_step.side_effect = lambda ws_id, step_num, step_name: (
                 step_num == 1 and step_name == "创建工作区"
@@ -2213,9 +2239,7 @@ class TestWorkflowOrchestrator:
             # Assert
             assert result["success"] is True
             # 验证步骤1被跳过
-            step1 = next(
-                (s for s in result["workflow_steps"] if s["step"] == 1), None
-            )
+            step1 = next((s for s in result["workflow_steps"] if s["step"] == 1), None)
             assert step1 is not None
             assert step1["status"] == "completed"
 
@@ -2316,7 +2340,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
         ):
             workspace_id = "req-test-017"
             mock_workspace_instance = MagicMock()
@@ -2394,7 +2420,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
         ):
             workspace_id = "req-test-018"
             mock_workspace_instance = MagicMock()
@@ -2614,7 +2642,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.check_trd_confirmation"
             ) as mock_check_trd,
@@ -2713,7 +2743,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.check_trd_confirmation"
             ) as mock_check_trd,
@@ -2817,7 +2849,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch("src.tools.prd_confirmation.WorkspaceManager") as mock_prd_ws_manager,
         ):
             workspace_id = "req-test-023"
@@ -2833,7 +2867,7 @@ class TestWorkflowOrchestrator:
             mock_update_state.return_value = None
             mock_get_state.return_value = {}
             prd_completed = [False]  # 使用列表以便在闭包中修改
-            
+
             # 不跳过任何步骤，让工作流正常执行到TRD步骤
             # 但在第三次调用时，PRD 步骤应该已完成
             def skip_step_side_effect(ws_id, step_num, step_name):
@@ -2841,6 +2875,7 @@ class TestWorkflowOrchestrator:
                 if step_num == 2 and step_name == "PRD 生成和确认":
                     return prd_completed[0]
                 return False
+
             mock_skip_step.side_effect = skip_step_side_effect
             mock_submit.return_value = {"success": True, "workspace_id": workspace_id}
             mock_generate_prd.return_value = {
@@ -3338,9 +3373,7 @@ class TestWorkflowOrchestrator:
             # 部分任务失败时应该继续执行
             assert result["success"] is True
             # 验证步骤5的状态为 failed
-            step5 = next(
-                (s for s in result["workflow_steps"] if s["step"] == 5), None
-            )
+            step5 = next((s for s in result["workflow_steps"] if s["step"] == 5), None)
             assert step5 is not None
             assert step5["status"] == "failed"
 
@@ -3487,7 +3520,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
             patch(
                 "src.tools.workflow_orchestrator.check_prd_confirmation"
             ) as mock_check_prd,
@@ -3876,7 +3911,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
         ):
             workspace_id = "req-test-033"
             mock_workspace_instance = MagicMock()
@@ -3998,7 +4035,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
         ):
             workspace_id = "req-test-034"
             mock_workspace_instance = MagicMock()
@@ -4349,7 +4388,9 @@ class TestWorkflowOrchestrator:
             patch(
                 "src.tools.workflow_orchestrator._should_skip_step"
             ) as mock_skip_step,
-            patch("src.tools.workflow_orchestrator.WorkspaceManager") as mock_ws_manager,
+            patch(
+                "src.tools.workflow_orchestrator.WorkspaceManager"
+            ) as mock_ws_manager,
         ):
             workspace_id = "req-test-037"
             mock_workspace_instance = MagicMock()
