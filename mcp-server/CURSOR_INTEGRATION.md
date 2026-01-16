@@ -165,26 +165,37 @@ python src\main.py
 
 ## 验证集成
 
+> **详细验证指南**：请参考 [验证指南](VERIFICATION_GUIDE.md) 获取完整的验证步骤和故障排查方法。
+
 ### 方法 1：检查 Cursor 日志
 
 1. 打开 Cursor
 2. 查看输出面板（View → Output）
-3. 选择 "MCP" 通道
+3. 选择 **"mcp logs"** 通道（在输出面板的下拉菜单中）
 4. 应该看到 Agent Orchestrator 的连接日志
 
-### 方法 2：使用 Cursor 命令面板
+### 方法 2：在聊天中测试工具调用（推荐）
 
-1. 按 `Cmd+Shift+P` (macOS) 或 `Ctrl+Shift+P` (Windows/Linux)
-2. 输入 "MCP" 查看可用的 MCP 命令
-3. 应该看到 Agent Orchestrator 相关的工具
+**重要说明**：MCP 工具不会直接出现在命令面板中。它们通过 `@agent-orchestrator` 语法在 Cursor 聊天界面中调用。
 
-### 方法 3：测试工具调用
+1. **打开 Cursor 聊天界面**（Composer 或 Chat）
+2. **使用 `@agent-orchestrator` 语法调用工具**：
+   ```
+   @agent-orchestrator create_workspace
+   ```
+   或者直接描述需求：
+   ```
+   请帮我创建一个新的工作区
+   ```
+3. **预期行为**：
+   - Cursor 应该识别 `@agent-orchestrator` 并调用相应的 MCP 工具
+   - 返回工具执行结果
+   - 如果工具不存在或未连接，会显示错误信息
 
-在 Cursor 中，尝试使用 Agent Orchestrator 的工具：
-
-```
-@agent-orchestrator generate_prd
-```
+**如果 `@agent-orchestrator` 无法识别**：
+- 检查 "mcp logs" 是否有连接日志
+- 确认 `mcp.json` 配置正确
+- 完全重启 Cursor IDE
 
 ## 可用工具列表
 
