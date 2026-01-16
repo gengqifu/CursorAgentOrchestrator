@@ -86,7 +86,18 @@ def _handle_error(error: Exception) -> list[TextContent]:
 
 @server.list_tools()
 async def list_tools() -> list[Tool]:
-    """列出所有可用工具。"""
+    """列出所有可用工具。
+
+    本函数返回所有通过 MCP Server 暴露的工具，包括：
+    - 基础设施工具（5个）：工作区和任务管理
+    - 工作流编排工具（10个）：用户交互、PRD/TRD确认、测试路径询问
+    - SKILL工具（8个）：PRD/TRD生成、任务分解、代码生成/审查、测试生成/审查、覆盖率分析
+    - 任务执行工具（2个）：单个任务执行、所有任务执行
+    - 多Agent支持工具（2个）：工作流状态查询、阶段依赖检查
+    - 完整工作流编排工具（1个）：端到端工作流执行
+
+    总计：28个工具
+    """
     return [
         # 基础设施工具
         Tool(
@@ -520,12 +531,26 @@ async def list_tools() -> list[Tool]:
 async def call_tool(name: str, arguments: dict[str, Any] | None) -> list[TextContent]:
     """调用工具。
 
+    本函数处理所有通过 MCP Server 暴露的工具调用，包括：
+    - 基础设施工具（5个）
+    - 工作流编排工具（10个）
+    - SKILL工具（8个）
+    - 任务执行工具（2个）
+    - 多Agent支持工具（2个）
+    - 完整工作流编排工具（1个）
+
+    所有工具调用都通过统一的错误处理机制，返回 JSON 格式的结果。
+
     Args:
         name: 工具名称
-        arguments: 工具参数
+        arguments: 工具参数（字典格式）
 
     Returns:
-        工具执行结果
+        工具执行结果（TextContent 列表，包含 JSON 格式的响应）
+
+    Raises:
+        ValueError: 当工具名称未知时
+        其他异常通过 _handle_error 统一处理
     """
     if arguments is None:
         arguments = {}

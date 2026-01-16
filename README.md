@@ -25,7 +25,7 @@
 
 ## 项目概述
 
-Agent Orchestrator 是一个智能开发流程编排系统，提供从需求分析到代码实现的完整自动化流程。通过 8 个核心 SKILL 工具，实现 PRD 生成、TRD 生成、任务分解、代码生成、代码审查、测试生成、测试审查和覆盖率分析等功能。
+Agent Orchestrator 是一个智能开发流程编排系统，提供从需求分析到代码实现的完整自动化流程。通过 8 个核心 SKILL 工具和完整工作流编排工具，实现 PRD 生成、TRD 生成、任务分解、代码生成、代码审查、测试生成、测试审查和覆盖率分析等功能。支持自动确认模式和交互模式，支持工作流中断和恢复。
 
 **当前版本**：v0.1.0（开发中）
 
@@ -34,7 +34,8 @@ Agent Orchestrator 是一个智能开发流程编排系统，提供从需求分�
 ## ✨ 核心特性
 
 - 🚀 **8 个核心 SKILL 工具**：完整的开发流程自动化
-- 🔄 **Multi-Agent 架构**：多智能体协作，提升代码质量
+- 🔄 **完整工作流编排**：一键执行从需求到代码完成的完整流程
+- 🤝 **Multi-Agent 架构**：多智能体协作，提升代码质量
 - 📦 **MCP 协议集成**：无缝集成到 Cursor IDE
 - 🧪 **TDD 开发模式**：测试覆盖率 95.57%（超过 90% 要求）
 - 🐍 **Python 3.9+ 兼容**：现代化 Python 代码
@@ -203,6 +204,49 @@ cd mcp-server
 
 ### 完整工作流程示例
 
+#### 方式1：使用完整工作流编排工具（推荐）
+
+**自动确认模式**（一次性完成所有步骤）：
+
+```bash
+@agent-orchestrator execute_full_workflow \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=https://example.com/req \
+  auto_confirm=true
+```
+
+**交互模式**（在关键步骤暂停，等待用户确认）：
+
+```bash
+# 第一次调用：开始工作流
+@agent-orchestrator execute_full_workflow \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=https://example.com/req \
+  auto_confirm=false
+
+# 返回 PRD 确认请求，用户确认后继续
+@agent-orchestrator execute_full_workflow \
+  workspace_id=req-xxx \
+  auto_confirm=false \
+  interaction_response='{"action": "confirm"}'
+
+# 返回 TRD 确认请求，用户确认后继续
+@agent-orchestrator execute_full_workflow \
+  workspace_id=req-xxx \
+  auto_confirm=false \
+  interaction_response='{"action": "confirm"}'
+
+# 返回测试路径询问，用户提供路径后继续
+@agent-orchestrator execute_full_workflow \
+  workspace_id=req-xxx \
+  auto_confirm=false \
+  interaction_response='{"answer": "/path/to/tests"}'
+```
+
+#### 方式2：分步骤调用（手动控制）
+
 ```bash
 # 阶段1：用户交互
 # 1. 询问4个问题并创建工作区
@@ -245,6 +289,8 @@ cd mcp-server
 # 10. 分析覆盖率
 @agent-orchestrator analyze_coverage workspace_id=req-xxx project_path=/path/to/project
 ```
+
+> **推荐使用方式1**：`execute_full_workflow` 工具可以自动完成所有步骤，支持自动确认模式和交互模式，支持工作流中断和恢复。
 
 ## 📁 项目结构
 
@@ -419,7 +465,8 @@ python3 -m mypy src
 - [快速开始](mcp-server/QUICK_START.md) - 5 分钟快速集成指南
 - [Cursor 集成方案](mcp-server/CURSOR_INTEGRATION.md) - 完整的集成配置文档
 - [架构设计](mcp-server/ARCHITECTURE.md) - 系统架构和技术设计
-- [工具文档](mcp-server/TOOLS.md) - 8 个核心 SKILL 工具的详细说明
+- [工具文档](mcp-server/TOOLS.md) - 所有工具的详细说明
+- [完整工作流使用指南](WORKFLOW_GUIDE.md) - 完整工作流编排工具使用指南
 - [安装指南](mcp-server/INSTALL.md) - 详细的安装和配置步骤
 - [Python 3 兼容性](mcp-server/PYTHON3_COMPATIBILITY.md) - Python 3.9+ 兼容性说明
 

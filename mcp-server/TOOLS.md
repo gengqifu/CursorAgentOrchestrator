@@ -36,6 +36,9 @@
 @agent-orchestrator get_workflow_status workspace_id=req-xxx
 @agent-orchestrator check_stage_ready workspace_id=req-xxx stage=trd
 
+# 完整工作流编排工具
+@agent-orchestrator execute_full_workflow project_path=/path/to/project requirement_name=用户认证功能 requirement_url=https://example.com/req auto_confirm=true
+
 # SKILL 工具
 @agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req
 @agent-orchestrator generate_trd workspace_id=req-xxx
@@ -63,6 +66,9 @@
 **多Agent支持工具**：
 - `get_workflow_status` - 获取工作流状态（各阶段状态、进度、可开始的阶段、被阻塞的阶段）
 - `check_stage_ready` - 检查阶段是否可以开始（验证前置阶段依赖和文件依赖）
+
+**完整工作流编排工具**：
+- `execute_full_workflow` - 执行完整工作流（从需求输入到代码完成和覆盖率分析）
 
 **8 个核心 SKILL 工具**：
 - `generate_prd` - PRD 生成
@@ -289,6 +295,77 @@
 - 防止前置阶段未完成时错误执行下一阶段
 
 **测试文件**: `tests/tools/test_stage_dependency_checker.py`
+
+### 7. 完整工作流编排工具 (`workflow_orchestrator`)
+
+**功能**: 执行完整工作流，从需求输入到代码完成和覆盖率分析
+
+**工具**:
+- `execute_full_workflow` - 执行完整工作流
+
+**输入**:
+- `project_path`: 项目路径（自动确认模式必需，交互模式可选）
+- `requirement_name`: 需求名称（自动确认模式必需，交互模式可选）
+- `requirement_url`: 需求URL或文件路径（自动确认模式必需，交互模式可选）
+- `workspace_path`: 工作区路径（可选，默认使用项目路径下的 .agent-orchestrator）
+- `workspace_id`: 工作区ID（用于恢复工作流，可选）
+- `auto_confirm`: 是否自动确认（默认为 True）。True: 自动确认模式；False: 交互模式
+- `max_review_retries`: 每个任务的最大 Review 重试次数（可选，默认为 3）
+- `interaction_response`: 交互响应（用于恢复工作流，可选）。包含 interaction_type 和相应的响应数据
+
+**输出**:
+- `success`: 是否成功
+- `workspace_id`: 工作区ID
+- `workflow_steps`: 工作流步骤列表（8个步骤）
+  - `step_name`: 步骤名称
+  - `status`: 步骤状态（"completed", "failed", "in_progress"）
+  - `result`: 步骤结果
+- `final_status`: 最终工作流状态
+- `interaction_required`: 是否需要交互（交互模式）
+- `interaction_type`: 交互类型（"questions", "prd_confirmation", "trd_confirmation", "question"）
+
+**工作流步骤**:
+1. **提交答案并创建工作区** - 调用 `submit_orchestrator_answers`
+2. **PRD 生成和确认** - 调用 `generate_prd`，然后 `confirm_prd`（自动确认模式）或 `check_prd_confirmation`（交互模式）
+3. **TRD 生成和确认** - 调用 `generate_trd`，然后 `confirm_trd`（自动确认模式）或 `check_trd_confirmation`（交互模式）
+4. **任务分解** - 调用 `decompose_tasks`
+5. **任务执行循环** - 调用 `execute_all_tasks`
+6. **询问测试路径** - 调用 `ask_test_path` 获取默认路径，然后 `submit_test_path`
+7. **生成测试** - 调用 `generate_tests`
+8. **生成覆盖率报告** - 调用 `analyze_coverage`
+
+**工作模式**:
+
+1. **自动确认模式** (`auto_confirm=True`):
+   - 自动确认 PRD 和 TRD
+   - 使用默认测试路径
+   - 无需用户交互，一次性完成所有步骤
+
+2. **交互模式** (`auto_confirm=False`):
+   - 在关键步骤暂停，等待用户确认或输入
+   - 支持 PRD/TRD 修改循环
+   - 支持工作流中断和恢复
+   - 返回 `interaction_required=True` 和 `interaction_type`，用户提供 `interaction_response` 后继续
+
+**工作流状态管理**:
+- 工作流状态保存在 `workspace.json` 的 `workflow_state` 字段中
+- 支持工作流中断和恢复（通过 `workspace_id` 和 `interaction_response`）
+- 支持步骤跳过（已完成步骤自动跳过）
+
+**使用示例**:
+
+```bash
+# 自动确认模式
+@agent-orchestrator execute_full_workflow project_path=/path/to/project requirement_name=用户认证功能 requirement_url=https://example.com/req auto_confirm=true
+
+# 交互模式
+@agent-orchestrator execute_full_workflow project_path=/path/to/project requirement_name=用户认证功能 requirement_url=https://example.com/req auto_confirm=false
+
+# 恢复工作流（交互模式）
+@agent-orchestrator execute_full_workflow workspace_id=req-xxx auto_confirm=false interaction_response='{"action": "confirm"}'
+```
+
+**测试文件**: `tests/tools/test_workflow_orchestrator.py`
 
 ## 8 个核心 SKILL 工具
 
