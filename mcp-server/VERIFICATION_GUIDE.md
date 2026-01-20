@@ -108,13 +108,24 @@ cd mcp-server
 在 Cursor 的聊天界面中，输入：
 
 ```
-@agent-orchestrator create_workspace
+@agent-orchestrator ask_orchestrator_questions
 ```
 
 **预期结果**：
 - 工具被识别并执行
-- 返回工作区 ID（如 `req-xxx`）
+- 返回 4 个问题（`project_path` / `requirement_name` / `requirement_url` / 可选 `workspace_path`）
 - 没有错误信息
+
+然后提交答案创建工作区：
+
+```bash
+@agent-orchestrator submit_orchestrator_answers \
+  project_path=/path/to/project \
+  requirement_name=验证测试 \
+  requirement_url=/path/to/requirement.md
+```
+
+**预期结果**：返回工作区 ID（如 `req-xxx`）
 
 #### 3.2 测试 SKILL 工具：生成 PRD
 
@@ -191,7 +202,7 @@ cd mcp-server
 
 1. **在 Cursor 聊天界面中测试**：
    ```
-   @agent-orchestrator create_workspace
+   @agent-orchestrator ask_orchestrator_questions
    ```
    或者直接描述需求：
    ```
@@ -214,7 +225,13 @@ cd mcp-server
 
 ```bash
 # 1. 创建工作区
-@agent-orchestrator create_workspace
+@agent-orchestrator ask_orchestrator_questions
+
+# 1.1 提交答案创建工作区（会返回 workspace_id）
+@agent-orchestrator submit_orchestrator_answers \
+  project_path=/path/to/project \
+  requirement_name=验证测试 \
+  requirement_url=/path/to/requirement.md
 
 # 2. 生成 PRD（需要先创建工作区）
 @agent-orchestrator generate_prd workspace_id=req-xxx requirement_url=https://example.com/req

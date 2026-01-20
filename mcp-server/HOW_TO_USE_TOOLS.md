@@ -22,7 +22,17 @@
 
 ```bash
 # 创建工作区
-@agent-orchestrator create_workspace
+@agent-orchestrator create_workspace \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=/path/to/requirement.md
+
+# 或者：先让工具询问问题，再提交答案（更适合交互式使用）
+@agent-orchestrator ask_orchestrator_questions
+@agent-orchestrator submit_orchestrator_answers \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=/path/to/requirement.md
 
 # 生成 PRD
 @agent-orchestrator generate_prd workspace_id=req-001 requirement_url=https://example.com/req.md
@@ -65,13 +75,24 @@
 在聊天界面中尝试：
 
 ```
-@agent-orchestrator create_workspace
+@agent-orchestrator ask_orchestrator_questions
 ```
 
 **预期结果**：
 - Cursor 识别并调用工具
-- 返回工作区 ID（如 `req-xxx`）
+- 返回 4 个问题（`project_path` / `requirement_name` / `requirement_url` / 可选 `workspace_path`）
 - 没有错误信息
+
+然后提交答案创建工作区：
+
+```bash
+@agent-orchestrator submit_orchestrator_answers \
+  project_path=/path/to/project \
+  requirement_name=用户认证功能 \
+  requirement_url=/path/to/requirement.md
+```
+
+**预期结果**：返回 `workspace_id`（如 `req-xxx`）
 
 **如果无法识别**：
 - 检查 "mcp logs" 是否有连接日志
@@ -101,11 +122,7 @@
 
 ### Q: 如何查看所有可用的工具？
 
-**A**: 在聊天界面中尝试：
-```
-@agent-orchestrator list_tools
-```
-或者查看文档：
+**A**: 目前没有单独的 `list_tools` 工具（工具列表由 MCP Server 通过协议提供）。请查看文档：
 - [TOOLS.md](TOOLS.md) - 完整的工具列表和说明
 - [CURSOR_INTEGRATION.md](CURSOR_INTEGRATION.md) - 集成指南
 
